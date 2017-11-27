@@ -188,6 +188,6 @@ func NewRuntimeCache() Cache {
 
 //new redis cache
 //must set serverIp like "10.0.1.11:6379"
-func NewRedisCache(serverIp string) *RedisCache {
+func NewRedisCache(serverIp string) RedisCache {
 	return redis.NewRedisCache(serverIp)
 }
