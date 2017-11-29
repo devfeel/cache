@@ -9,7 +9,7 @@ import (
 const (
 	CacheType_Runtime = "runtime"
 	CacheType_Redis   = "redis"
-	CacheType_MemCache = "memcache"
+	CacheType_MemCached = "memcached"
 )
 
 var (
@@ -129,7 +129,7 @@ type (
 
 	}
 
-	MemCache interface {
+	MemCached interface {
 		Cache
 	}
 )
