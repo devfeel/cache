@@ -212,7 +212,7 @@ func (rc *RedisClient) HDel(key string, field ...interface{}) (int, error){
 func (rc *RedisClient) HExist(key string, field string) (int, error){
 	conn := rc.pool.Get()
 	defer conn.Close()
-	val, err := redis.Int(conn.Do("HEXIST", key, field))
+	val, err := redis.Int(conn.Do("HEXISTS", key, field))
 	return val, err
 }
 func (rc *RedisClient) HIncrBy(key string, field string, increment int)(int, error){
