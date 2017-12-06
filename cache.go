@@ -7,8 +7,8 @@ import (
 )
 
 const (
-	CacheType_Runtime = "runtime"
-	CacheType_Redis   = "redis"
+	CacheType_Runtime   = "runtime"
+	CacheType_Redis     = "redis"
 	CacheType_MemCached = "memcached"
 )
 
@@ -47,7 +47,6 @@ type (
 		Delete(key string) error
 		// ClearAll clear all cache items
 		ClearAll() error
-
 	}
 
 	RedisCache interface {
@@ -57,8 +56,6 @@ type (
 		//Sets field in the hash stored at key to value. If key does not exist, a new key holding a hash is created.
 		//If field already exists in the hash, it is overwritten.
 		HSet(hashID string, field string, val string) error
-
-
 
 		HGetAll(hashID string) (map[string]string, error)
 		HSetNx(hashID string, field string, val string) (string, error)
@@ -70,67 +67,62 @@ type (
 		HLen(hashID string) (int64, error)
 		HVals(hashID string) ([]string, error)
 
-		BLPop(args ...string)([]string, error)
+		BLPop(args ...string) ([]string, error)
 		//BRPOP is a blocking list pop primitive
 		BRPop(key string) (string, error)
 		//BRPOPLPUSH is a operation like RPOPLPUSH but blocking
-		BRPopLPush(args ...string)([]string, error)
+		BRPopLPush(args ...string) ([]string, error)
 		//return element which subscript is index,
 		// if index is -1, return last one element of list and so on
-		LIndex(key string, index int64)(string, error)
+		LIndex(key string, index int64) (string, error)
 		//LINSERT key BEFORE|AFTER pivot value
-		LInsertBefore()()
+		LInsertBefore() ()
 		//insert a new element after one element of list
-		LInsertAfter()()
+		LInsertAfter() ()
 		//return length of list
 		LLen() (int64, error)
 		//remove and return head element of list
-		LPop()()
+		LPop() ()
 		//Insert all the specified values at the head of the list stored at key
 		LPush(key string, val string) (int64, error)
 		//insert an element at the head of the list
-		LPushX()()
+		LPushX() ()
 		//LRANGE key start stop
-		LRange(key string, start int64, end int64)([]string, error)
+		LRange(key string, start int64, end int64) ([]string, error)
 
-		LRem(key string, count int64, value string)(int64, error)
+		LRem(key string, count int64, value string) (int64, error)
 
-		LSet(key string, index int64, value string)(string, error)
+		LSet(key string, index int64, value string) (string, error)
 
-		LTrim(key string, start int64, stop int64)(string, error)
+		LTrim(key string, start int64, stop int64) (string, error)
 
-		RPop(key string)(string, error)
+		RPop(key string) (string, error)
 
-		RPopLPush(source string, destination string)(string, error)
+		RPopLPush(source string, destination string) (string, error)
 		//RPUSH key value [value ...]
 		RPush(key string, value ...string) int64
 		//push a value to list only if list is exist and return length of list after push
 		// or return 0
 		RPushX(key string, value ...string) int64
 
-
-		SAdd(key string, value ...string)(int64, error)
+		SAdd(key string, value ...string) (int64, error)
 		SCard(key string) (int64, error)
-		SDiff(key ...string)([]string, error)
-		SDiffStore(key ...string)([]string, error)
-		SInter(key ...string)([]string, error)
-		SInterStore(destination string, key ...string)(int64, error)
-		SIsMember(key string, value string)(int64, error)
-		SMembers(key string)([]string, error)
-		SMove(source string, destination string, value string)(int64, error)
-		SPop(key string)(string, error)
-		SRandMember(key string, count int64)([]string, error)
-		SRem(key string, value ...string)(int64, error)
-		SUnion(key ...string)([]string, error)
-		SUnionStore(destination string, key ...string)(int64, error)
-
-
-
-
+		SDiff(key ...string) ([]string, error)
+		SDiffStore(key ...string) ([]string, error)
+		SInter(key ...string) ([]string, error)
+		SInterStore(destination string, key ...string) (int64, error)
+		SIsMember(key string, value string) (int64, error)
+		SMembers(key string) ([]string, error)
+		SMove(source string, destination string, value string) (int64, error)
+		SPop(key string) (string, error)
+		SRandMember(key string, count int64) ([]string, error)
+		SRem(key string, value ...string) (int64, error)
+		SUnion(key ...string) ([]string, error)
+		SUnionStore(destination string, key ...string) (int64, error)
 	}
 
-	MemCached interface {
-		Cache
+	McCache interface {
+		Get()()
 	}
 )
 
@@ -190,4 +182,8 @@ func NewRuntimeCache() Cache {
 //must set serverIp like "10.0.1.11:6379"
 func NewRedisCache(serverIp string) RedisCache {
 	return redis.NewRedisCache(serverIp)
+}
+
+func NewMemcachedCache(server ...string) McCache{
+
 }
