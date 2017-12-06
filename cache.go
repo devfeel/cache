@@ -147,6 +147,9 @@ func GetCache(ctype string, serverip ...string) Cache {
 		}
 		return GetRedisCache(serverip[0])
 	case CacheType_MemCached:
+		if len(serverip) <= 0 {
+			panic("GetMemcachedCache lost serverip!")
+		}
 		return GetMemcachedCache(serverip...)
 	default:
 		return GetRuntimeCache()
