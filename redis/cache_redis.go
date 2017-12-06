@@ -1,8 +1,10 @@
 package redis
 
 import (
-	"github.com/devfeel/cache/internal"		//internal目录 不允许其他包调用, commit时候改回来
+	//"github.com/devfeel/cache/internal"		//internal目录 不允许其他包调用, commit时候改回来
 	"strconv"
+
+	"github.com/chacha923/cache/internal"
 	"errors"
 )
 
