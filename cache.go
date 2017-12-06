@@ -4,6 +4,7 @@ import (
 	"github.com/devfeel/cache/redis"
 	"github.com/devfeel/cache/runtime"
 	"sync"
+	"github.com/devfeel/cache/memcached"
 )
 
 const (
@@ -121,8 +122,9 @@ type (
 		SUnionStore(destination string, key ...string) (int64, error)
 	}
 
-	McCache interface {
-		Get()()
+	//memcached interface
+	MemcachedCache interface {
+		Cache
 	}
 )
 
@@ -144,6 +146,8 @@ func GetCache(ctype string, serverip ...string) Cache {
 			panic("GetRedisCache lost serverip!")
 		}
 		return GetRedisCache(serverip[0])
+	case CacheType_MemCached:
+		return GetMemcachedCache(serverip...)
 	default:
 		return GetRuntimeCache()
 	}
@@ -173,6 +177,11 @@ func GetRedisCache(serverIp string) RedisCache {
 	}
 }
 
+//set server like "127.0.0.1:11211"
+func GetMemcachedCache(server ...string) Cache{
+	return NewMemcachedCache(server...)
+}
+
 //new runtime cache
 func NewRuntimeCache() Cache {
 	return runtime.NewRuntimeCache()
@@ -184,6 +193,7 @@ func NewRedisCache(serverIp string) RedisCache {
 	return redis.NewRedisCache(serverIp)
 }
 
-func NewMemcachedCache(server ...string) McCache{
-
+func NewMemcachedCache(server ...string) MemcachedCache{
+	return memcached.NewMemcachedCache(server...)
 }
+
