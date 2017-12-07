@@ -59,67 +59,65 @@ type (
 		HSet(hashID string, field string, val string) error
 
 		HGetAll(hashID string) (map[string]string, error)
-		HSetNx(hashID string, field string, val string) (string, error)
-		HDel(hashID string, fields ...interface{}) (int64, error)
-		HExists(hashID string, field string) (int64, error)
-		HIncrBy(hashID string, field string) (int64, error)
-		HIncrByFloat(hashID string, field string) (string, error)
+		HSetNX(hashID string, field string, val string) (string, error)
+		HDel(hashID string, fields ...interface{}) (int, error)
+		HExists(hashID string, field string) (int, error)
+		HIncrBy(hashID string, field string, increment int) (int, error)
+		HIncrByFloat(hashID string, field string, increment float64) (float64, error)
 		HKeys(hashID string) ([]string, error)
-		HLen(hashID string) (int64, error)
+		HLen(hashID string) (int, error)
 		HVals(hashID string) ([]string, error)
 
-		BLPop(args ...string) ([]string, error)
+		BLPop(key ...interface{}) (map[string]string, error)
 		//BRPOP is a blocking list pop primitive
-		BRPop(key string) (string, error)
+		BRPop(key ...interface{}) (map[string]string, error)
 		//BRPOPLPUSH is a operation like RPOPLPUSH but blocking
-		BRPopLPush(args ...string) ([]string, error)
+		BRPopLPush(source string, destination string) (string, error)
 		//return element which subscript is index,
 		// if index is -1, return last one element of list and so on
-		LIndex(key string, index int64) (string, error)
+		LIndex(key string, index int) (string, error)
 		//LINSERT key BEFORE|AFTER pivot value
-		LInsertBefore() ()
-		//insert a new element after one element of list
-		LInsertAfter() ()
+		LInsert(key string, direction string, pivot string, value string) (int, error)
 		//return length of list
-		LLen() (int64, error)
+		LLen(key string) (int, error)
 		//remove and return head element of list
-		LPop() ()
+		LPop(key string) (string, error)
 		//Insert all the specified values at the head of the list stored at key
-		LPush(key string, val string) (int64, error)
+		LPush(key string, value ...interface{}) (int, error)
 		//insert an element at the head of the list
-		LPushX() ()
+		LPushX(key string, value string) (int, error)
 		//LRANGE key start stop
-		LRange(key string, start int64, end int64) ([]string, error)
+		LRange(key string, start int, end int) ([]string, error)
 
-		LRem(key string, count int64, value string) (int64, error)
+		LRem(key string, count int, value string) (int, error)
 
-		LSet(key string, index int64, value string) (string, error)
+		LSet(key string, index int, value string) (string, error)
 
-		LTrim(key string, start int64, stop int64) (string, error)
+		LTrim(key string, start int, stop int) (string, error)
 
 		RPop(key string) (string, error)
 
 		RPopLPush(source string, destination string) (string, error)
 		//RPUSH key value [value ...]
-		RPush(key string, value ...string) int64
+		RPush(key string, value ...interface{}) (int, error)
 		//push a value to list only if list is exist and return length of list after push
 		// or return 0
-		RPushX(key string, value ...string) int64
+		RPushX(key string, value ...interface{}) (int, error)
 
-		SAdd(key string, value ...string) (int64, error)
-		SCard(key string) (int64, error)
-		SDiff(key ...string) ([]string, error)
-		SDiffStore(key ...string) ([]string, error)
-		SInter(key ...string) ([]string, error)
-		SInterStore(destination string, key ...string) (int64, error)
-		SIsMember(key string, value string) (int64, error)
+		SAdd(key string, value ...interface{}) (int, error)
+		SCard(key string) (int, error)
+		SDiff(key ...interface{}) ([]string, error)
+		SDiffStore(destination string, key ...interface{}) (int, error)
+		SInter(key ...interface{}) ([]string, error)
+		SInterStore(destination string, key ...interface{}) (int, error)
+		SIsMember(key string, value string) (bool, error)
 		SMembers(key string) ([]string, error)
-		SMove(source string, destination string, value string) (int64, error)
+		SMove(source string, destination string, value string) (bool, error)
 		SPop(key string) (string, error)
-		SRandMember(key string, count int64) ([]string, error)
-		SRem(key string, value ...string) (int64, error)
-		SUnion(key ...string) ([]string, error)
-		SUnionStore(destination string, key ...string) (int64, error)
+		SRandMember(key string, count int) ([]string, error)
+		SRem(key string, value ...interface{}) (int, error)
+		SUnion(key ...interface{}) ([]string, error)
+		SUnionStore(destination string, key ...interface{}) (int, error)
 	}
 
 	//memcached interface

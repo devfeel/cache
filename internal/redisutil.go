@@ -142,7 +142,7 @@ func (rc *RedisClient) Set(key string, val interface{}) (interface{}, error) {
 }
 
 //设置指定key的内容
-func (rc *RedisClient) SetWithExpire(key string, val interface{}, timeOutSeconds int) (interface{}, error) {
+func (rc *RedisClient) SetWithExpire(key string, val interface{}, timeOutSeconds int64) (interface{}, error) {
 	conn := rc.pool.Get()
 	defer conn.Close()
 	val, err := conn.Do("SET", key, val, "EX", timeOutSeconds)
@@ -193,10 +193,10 @@ func (rc *RedisClient) HSet(hashID string, field string, val string) error {
 	return err
 }
 
-func (rc *RedisClient) HSetNX(hashID string, field string, val string) (int, error) {
+func (rc *RedisClient) HSetNX(hashID string, field string, val string) (string, error) {
 	conn := rc.pool.Get()
 	defer conn.Close()
-	reply, err := redis.Int(conn.Do("HSETNX", hashID, field, val))
+	reply, err := redis.String(conn.Do("HSETNX", hashID, field, val))
 	return reply, err
 }
 
@@ -316,10 +316,11 @@ func (rc *RedisClient) RPush(key string, value ...interface{}) (int, error){
 	return resp, err
 }
 
-func (rc *RedisClient) RPushX(key string, value string) (int, error) {
+func (rc *RedisClient) RPushX(key string, value ...interface{}) (int, error) {
 	conn := rc.pool.Get()
 	defer conn.Close()
-	resp, err := redis.Int(conn.Do("RPUSHX", key, value))
+	args := append([]interface{}{key}, value...)
+	resp, err := redis.Int(conn.Do("RPUSHX", args...))
 	return resp, err
 }
 
@@ -416,10 +417,10 @@ func (rc *RedisClient) SCard(key string) (int, error) {
 // SPop 移除并返回集合中的一个随机元素。
 // 如果只想获取一个随机元素，但不想该元素从集合中被移除的话，可以使用 SRANDMEMBER 命令。
 // count 为 返回的随机元素的数量
-func (rc *RedisClient) SPop(key string, count int) (string, error) {
+func (rc *RedisClient) SPop(key string) (string, error) {
 	conn := rc.pool.Get()
 	defer conn.Close()
-	val, err := redis.String(conn.Do("SPOP", key, count))
+	val, err := redis.String(conn.Do("SPOP", key))
 	return val, err
 }
 

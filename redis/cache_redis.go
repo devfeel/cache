@@ -104,7 +104,7 @@ func (ca *redisCache) GetInt64(key string) (int64, error) {
 
 // Set cache to redis.
 // ttl is second, if ttl is 0, it will be forever.
-func (ca *redisCache) Set(key string, value interface{}, ttl int) error {
+func (ca *redisCache) Set(key string, value interface{}, ttl int64) error {
 	client := internal.GetRedisClient(ca.serverIp)
 	_, err := client.SetWithExpire(key, value, ttl)
 	return err
@@ -132,6 +132,11 @@ func (ca *redisCache) HGet(key, field string) (string, error) {
 	return client.HGet(key, field)
 }
 
+func (ca *redisCache) HGetAll(key string) (map[string]string, error) {
+	client := internal.GetRedisClient(ca.serverIp)
+	return client.HGetAll(key)
+}
+
 //Sets field in the hash stored at key to value. If key does not exist, a new key holding a hash is created.
 //If field already exists in the hash, it is overwritten.
 func (ca *redisCache) HSet(key, field, value string) error {
@@ -149,7 +154,7 @@ func (ca *redisCache) HExists (key string, field string) (int, error){
 	return client.HExist(key, field)
 }
 
-func (ca *redisCache) HSetNX(key string, field string, value string) (int, error){
+func (ca *redisCache) HSetNX(key string, field string, value string) (string, error){
 	client := internal.GetRedisClient(ca.serverIp)
 	return client.HSetNX(key, field, value)
 }
@@ -179,7 +184,7 @@ func (ca *redisCache) HVals(key string) ([]string, error){
 
 func (ca *redisCache) BLPop(key ...interface{})(map[string]string, error){
 	client := internal.GetRedisClient(ca.serverIp)
-	return client.BLPop(key)
+	return client.BLPop(key...)
 }
 
 //BRPOP is a blocking list pop primitive
@@ -276,9 +281,9 @@ func (ca *redisCache) RPush(key string, value ...interface{}) (int, error){
 
 //push a value to list only if list is exist and return length of list after push
 // or return 0
-func (ca *redisCache) RPushX(key string, value string) (int, error){
+func (ca *redisCache) RPushX(key string, value ...interface{}) (int, error){
 	client := internal.GetRedisClient(ca.serverIp)
-	return client.RPushX(key, value)
+	return client.RPushX(key, value...)
 }
 
 
@@ -319,9 +324,9 @@ func (ca *redisCache) SMove(source string, destination string, member string)(bo
 	client := internal.GetRedisClient(ca.serverIp)
 	return client.SMove(source, destination, member)
 }
-func (ca *redisCache) SPop(key string, count int)(string, error){
+func (ca *redisCache) SPop(key string)(string, error){
 	client := internal.GetRedisClient(ca.serverIp)
-	return client.SPop(key, count)
+	return client.SPop(key)
 }
 func (ca *redisCache) SRandMember(key string, count int)([]string, error){
 	client := internal.GetRedisClient(ca.serverIp)
@@ -331,9 +336,9 @@ func (ca *redisCache) SRem(key string, member ...interface{})(int, error){
 	client := internal.GetRedisClient(ca.serverIp)
 	return client.SRem(key, member...)
 }
-func (ca *redisCache)  SUnion(key ...string)([]string, error){
+func (ca *redisCache)  SUnion(key ...interface{})([]string, error){
 	client := internal.GetRedisClient(ca.serverIp)
-	return client.SUnion(key)
+	return client.SUnion(key...)
 }
 func (ca *redisCache)  SUnionStore(destination string, key ...interface{})(int, error){
 	client := internal.GetRedisClient(ca.serverIp)
