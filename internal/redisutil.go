@@ -26,17 +26,18 @@ func init() {
 }
 
 // 重写生成连接池方法
-func newPool(redisIP string) *redis.Pool {
-
+// redisURL: connection string, like "redis://:password@10.0.1.11:6379/0"
+func newPool(redisURL string) *redis.Pool {
 	return &redis.Pool{
 		MaxIdle:   5,
 		MaxActive: 20, // max number of connections
 		Dial: func() (redis.Conn, error) {
-			c, err := redis.Dial("tcp", redisIP)
+			c, err := redis.DialURL(redisURL)
 			return c, err
 		},
 	}
 }
+
 
 //获取指定Address的RedisClient
 func GetRedisClient(address string) *RedisClient {
@@ -512,6 +513,7 @@ func (rc *RedisClient) SUnionStore(destination string, key ...interface{})(int, 
 	return val, err
 }
 
+//****************** 全局操作 ***********************
 // DBSize 返回当前数据库的 key 的数量
 func (rc *RedisClient) DBSize()(int, error){
 	conn := rc.pool.Get()

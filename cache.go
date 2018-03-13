@@ -4,13 +4,11 @@ import (
 	"github.com/devfeel/cache/redis"
 	"github.com/devfeel/cache/runtime"
 	"sync"
-	"github.com/devfeel/cache/memcached"
 )
 
 const (
 	CacheType_Runtime   = "runtime"
 	CacheType_Redis     = "redis"
-	CacheType_MemCached = "memcached"
 )
 
 var (
@@ -52,78 +50,102 @@ type (
 
 	RedisCache interface {
 		Cache
-		//Returns the value associated with field in the hash stored at key.
-		HGet(hashID string, field string) (string, error)
-		//Sets field in the hash stored at key to value. If key does not exist, a new key holding a hash is created.
-		//If field already exists in the hash, it is overwritten.
-		HSet(hashID string, field string, val string) error
 
+		/*---------- Hash -----------*/
+		// HGet Returns the value associated with field in the hash stored at key.
+		HGet(hashID string, field string) (string, error)
+		// HSet Sets field in the hash stored at key to value. If key does not exist, a new key holding a hash is created.
+		// If field already exists in the hash, it is overwritten.
+		HSet(hashID string, field string, val string) error
+		// HGetAll Returns all fields and values of the hash stored at key
 		HGetAll(hashID string) (map[string]string, error)
+		// HSetNX Sets field in the hash stored at key to value, only if field does not yet exist
 		HSetNX(hashID string, field string, val string) (string, error)
+		// HDel Removes the specified fields from the hash stored at key.
 		HDel(hashID string, fields ...interface{}) (int, error)
+		// HExists Returns if field is an existing field in the hash stored at key
 		HExists(hashID string, field string) (int, error)
+		// HIncrBy Increments the number stored at field in the hash stored at key by increment.
 		HIncrBy(hashID string, field string, increment int) (int, error)
+		// HIncrByFloat Increment the specified field of a hash stored at key, and representing a floating point number, by the specified increment
 		HIncrByFloat(hashID string, field string, increment float64) (float64, error)
+		// HKeys Returns all field names in the hash stored at key.
 		HKeys(hashID string) ([]string, error)
+		// HLen Returns the number of fields contained in the hash stored at key
 		HLen(hashID string) (int, error)
+		// HVals Returns all values in the hash stored at key
 		HVals(hashID string) ([]string, error)
 
+		/*---------- List -----------*/
+		// BLPop BLPOP is a blocking list pop primitive.
+		// It is the blocking version of LPOP because it blocks the connection when there are no elements to pop from any of the given lists
 		BLPop(key ...interface{}) (map[string]string, error)
-		//BRPOP is a blocking list pop primitive
+		// BRPOP is a blocking list pop primitive
+		// It is the blocking version of RPOP because it blocks the connection when there are no elements to pop from any of the given lists
 		BRPop(key ...interface{}) (map[string]string, error)
-		//BRPOPLPUSH is a operation like RPOPLPUSH but blocking
+		// BRPOPLPUSH is a operation like RPOPLPUSH but blocking
 		BRPopLPush(source string, destination string) (string, error)
-		//return element which subscript is index,
+		// LIndex return element which subscript is index,
 		// if index is -1, return last one element of list and so on
 		LIndex(key string, index int) (string, error)
-		//LINSERT key BEFORE|AFTER pivot value
+		// LInsert Inserts value in the list stored at key either before or after the reference value pivot.
 		LInsert(key string, direction string, pivot string, value string) (int, error)
-		//return length of list
+		// LLen return length of list
 		LLen(key string) (int, error)
-		//remove and return head element of list
+		// LPop remove and return head element of list
 		LPop(key string) (string, error)
-		//Insert all the specified values at the head of the list stored at key
+		// LPush Insert all the specified values at the head of the list stored at key
 		LPush(key string, value ...interface{}) (int, error)
-		//insert an element at the head of the list
+		// LPushX insert an element at the head of the list
 		LPushX(key string, value string) (int, error)
-		//LRANGE key start stop
+		// LRange Returns the specified elements of the list stored at key
 		LRange(key string, start int, end int) ([]string, error)
-
+		// LRem Removes the first count occurrences of elements equal to value from the list stored at key.
 		LRem(key string, count int, value string) (int, error)
-
+		// LSet Sets the list element at index to value
 		LSet(key string, index int, value string) (string, error)
-
+		// LTrim Trim an existing list so that it will contain only the specified range of elements specified
 		LTrim(key string, start int, stop int) (string, error)
-
+		// RPop Removes and returns the last element of the list stored at key
 		RPop(key string) (string, error)
-
+		// RPopLPush Atomically returns and removes the last element (tail) of the list stored at source, and pushes the element at the first element (head) of the list stored at destination
 		RPopLPush(source string, destination string) (string, error)
-		//RPUSH key value [value ...]
+		// RPush Insert all the specified values at the tail of the list stored at key.
 		RPush(key string, value ...interface{}) (int, error)
-		//push a value to list only if list is exist and return length of list after push
-		// or return 0
+		// RPushX Inserts value at the tail of the list stored at key, only if key already exists and holds a list
 		RPushX(key string, value ...interface{}) (int, error)
 
+		/*---------- Set -----------*/
+		// SAdd Add the specified members to the set stored at key
 		SAdd(key string, value ...interface{}) (int, error)
+		// SCard Returns the set cardinality (number of elements) of the set stored at key
 		SCard(key string) (int, error)
+		// SDiff Returns the members of the set resulting from the difference between the first set and all the successive sets
 		SDiff(key ...interface{}) ([]string, error)
+		// SDiffStore This command is equal to SDIFF, but instead of returning the resulting set, it is stored in destination
 		SDiffStore(destination string, key ...interface{}) (int, error)
+		// SInter Returns the members of the set resulting from the intersection of all the given sets.
 		SInter(key ...interface{}) ([]string, error)
+		// SInterStore This command is equal to SINTER, but instead of returning the resulting set, it is stored in destination
 		SInterStore(destination string, key ...interface{}) (int, error)
+		// SIsMember Returns if member is a member of the set stored at key.
 		SIsMember(key string, value string) (bool, error)
+		// SMembers Returns all the members of the set value stored at key.
 		SMembers(key string) ([]string, error)
+		// SMove Move member from the set at source to the set at destination
 		SMove(source string, destination string, value string) (bool, error)
+		// SPop Removes and returns one or more random elements from the set value store at key.
 		SPop(key string) (string, error)
+		// SRandMember When called with just the key argument, return a random element from the set value stored at key
 		SRandMember(key string, count int) ([]string, error)
+		// SRem Remove the specified members from the set stored at key
 		SRem(key string, value ...interface{}) (int, error)
+		// SUnion Returns the members of the set resulting from the union of all the given sets
 		SUnion(key ...interface{}) ([]string, error)
+		// SUnionStore This command is equal to SUNION, but instead of returning the resulting set, it is stored in destination
 		SUnionStore(destination string, key ...interface{}) (int, error)
 	}
 
-	//memcached interface
-	MemcachedCache interface {
-		Cache
-	}
 )
 
 func Must(i interface{}, err error) interface{} {
@@ -144,11 +166,6 @@ func GetCache(ctype string, serverip ...string) Cache {
 			panic("GetRedisCache lost serverip!")
 		}
 		return GetRedisCache(serverip[0])
-	case CacheType_MemCached:
-		if len(serverip) <= 0 {
-			panic("GetMemcachedCache lost serverip!")
-		}
-		return GetMemcachedCache(serverip...)
 	default:
 		return GetRuntimeCache()
 	}
@@ -163,7 +180,7 @@ func GetRuntimeCache() Cache {
 }
 
 //get redis cache
-//must set serverIp like "10.0.1.11:6379"
+//must set serverIp like "redis://:password@10.0.1.11:6379/0"
 func GetRedisCache(serverIp string) RedisCache {
 	c, ok := redisCacheMap[serverIp]
 	if !ok {
@@ -178,10 +195,6 @@ func GetRedisCache(serverIp string) RedisCache {
 	}
 }
 
-//set server like "127.0.0.1:11211"
-func GetMemcachedCache(server ...string) Cache{
-	return NewMemcachedCache(server...)
-}
 
 //new runtime cache
 func NewRuntimeCache() Cache {
@@ -189,12 +202,8 @@ func NewRuntimeCache() Cache {
 }
 
 //new redis cache
-//must set serverIp like "10.0.1.11:6379"
+//must set serverIp like "redis://:password@10.0.1.11:6379/0"
 func NewRedisCache(serverIp string) RedisCache {
 	return redis.NewRedisCache(serverIp)
-}
-
-func NewMemcachedCache(server ...string) MemcachedCache{
-	return memcached.NewMemcachedCache(server...)
 }
 

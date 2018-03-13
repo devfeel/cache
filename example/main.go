@@ -14,11 +14,12 @@ func main() {
 	c2 := cache.NewRuntimeCache()
 	fmt.Println(c2.GetString("1"))
 
-	cr := cache.GetRedisCache("192.168.8.175:6379")
+	redisServer := "redis://192.168.8.175:6379/0"
+	cr := cache.GetRedisCache(redisServer)
 	cr.Set("1", 1, 100)
 	fmt.Println(cache.Must(cr.GetString("1")))
 
-	c0 := cache.GetCache(cache.CacheType_Redis, "192.168.8.175:6379")
+	c0 := cache.GetCache(cache.CacheType_Redis, redisServer)
 	c0.Delete("1")
 	fmt.Println(c0.GetString("1"))
 }
