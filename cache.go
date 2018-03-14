@@ -75,6 +75,10 @@ type (
 		HLen(hashID string) (int, error)
 		// HVals Returns all values in the hash stored at key
 		HVals(hashID string) ([]string, error)
+		// GetJsonObj get obj with SetJsonObj key
+		GetJsonObj(key string, result interface{})error
+		// SetJsonObj set obj use json encode string
+		SetJsonObj(key string, val interface{}) (interface{}, error)
 
 		/*---------- List -----------*/
 		// BLPop BLPOP is a blocking list pop primitive.
@@ -156,16 +160,16 @@ func Must(i interface{}, err error) interface{} {
 }
 
 //get cache by gived ctype
-//if set CacheType_Redis, must set serverip
-func GetCache(ctype string, serverip ...string) Cache {
+//if set CacheType_Redis, must set serverUrl
+func GetCache(ctype string, serverUrl ...string) Cache {
 	switch ctype {
 	case CacheType_Runtime:
 		return GetRuntimeCache()
 	case CacheType_Redis:
-		if len(serverip) <= 0 {
+		if len(serverUrl) <= 0 {
 			panic("GetRedisCache lost serverip!")
 		}
-		return GetRedisCache(serverip[0])
+		return GetRedisCache(serverUrl[0])
 	default:
 		return GetRuntimeCache()
 	}
@@ -181,12 +185,12 @@ func GetRuntimeCache() Cache {
 
 //get redis cache
 //must set serverIp like "redis://:password@10.0.1.11:6379/0"
-func GetRedisCache(serverIp string) RedisCache {
-	c, ok := redisCacheMap[serverIp]
+func GetRedisCache(serverUrl string) RedisCache {
+	c, ok := redisCacheMap[serverUrl]
 	if !ok {
-		c = NewRedisCache(serverIp)
+		c = NewRedisCache(serverUrl)
 		redisCacheLock.Lock()
-		redisCacheMap[serverIp] = c
+		redisCacheMap[serverUrl] = c
 		redisCacheLock.Unlock()
 		return c
 
@@ -203,7 +207,7 @@ func NewRuntimeCache() Cache {
 
 //new redis cache
 //must set serverIp like "redis://:password@10.0.1.11:6379/0"
-func NewRedisCache(serverIp string) RedisCache {
-	return redis.NewRedisCache(serverIp)
+func NewRedisCache(serverUrl string) RedisCache {
+	return redis.NewRedisCache(serverUrl)
 }
 

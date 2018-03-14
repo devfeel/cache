@@ -126,6 +126,19 @@ func (ca *redisCache) ClearAll() error {
 	return nil
 }
 
+// GetJsonObj get obj with SetJsonObj key
+func (ca *redisCache) GetJsonObj(key string, result interface{})error {
+	client := internal.GetRedisClient(ca.serverUrl)
+	err := client.GetJsonObj(key, result)
+	return err
+}
+
+// SetJsonObj set obj use json encode string
+func (ca *redisCache) SetJsonObj(key string, val interface{}) (interface{}, error){
+	client := internal.GetRedisClient(ca.serverUrl)
+	reply, err := client.SetJsonObj(key, val)
+	return reply, err
+}
 
 /*---------- Hash -----------*/
 // HGet Returns the value associated with field in the hash stored at key.

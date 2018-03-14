@@ -4,6 +4,7 @@ package internal
 import (
 	"github.com/garyburd/redigo/redis"
 	"sync"
+	"encoding/json"
 )
 
 type RedisClient struct {
@@ -142,7 +143,7 @@ func (rc *RedisClient) Set(key string, val interface{}) (interface{}, error) {
 	return val, err
 }
 
-//设置指定key的内容
+// SetWithExpire 设置指定key的内容
 func (rc *RedisClient) SetWithExpire(key string, val interface{}, timeOutSeconds int64) (interface{}, error) {
 	conn := rc.pool.Get()
 	defer conn.Close()
@@ -160,13 +161,37 @@ func (rc *RedisClient) SetNX(key, value string) (int, error){
 	return val, err
 }
 
-//设置指定key的过期时间
+// Expire 设置指定key的过期时间
 func (rc *RedisClient) Expire(key string, timeOutSeconds int) (int, error) {
 	conn := rc.pool.Get()
 	defer conn.Close()
 	val, err := redis.Int(conn.Do("EXPIRE", key, timeOutSeconds))
 	return val, err
 }
+
+// GetJsonObj get obj with SetJsonObj key
+func (rc *RedisClient) GetJsonObj(key string, result interface{})error {
+	jsonStr, err:=redis.String(rc.GetObj(key))
+	if err!= nil{
+		return err
+	}
+	err = json.Unmarshal([]byte(jsonStr), result)
+	return err
+}
+
+
+// SetJsonObj set obj use json encode string
+func (rc *RedisClient) SetJsonObj(key string, val interface{}) (interface{}, error) {
+	conn := rc.pool.Get()
+	defer conn.Close()
+	jsonStr, err := json.Marshal(val)
+	if err != nil{
+		return nil, err
+	}
+	reply, err := redis.String(conn.Do("SET", key, jsonStr))
+	return reply, err
+}
+
 
 //删除当前数据库里面的所有数据
 //这个命令永远不会出现失败
