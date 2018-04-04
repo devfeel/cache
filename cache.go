@@ -4,7 +4,6 @@ import (
 	"github.com/devfeel/cache/redis"
 	"github.com/devfeel/cache/runtime"
 	"sync"
-	"github.com/devfeel/cache/internal"
 )
 
 const (
