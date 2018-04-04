@@ -366,3 +366,16 @@ func (ca *redisCache)  SUnionStore(destination string, key ...interface{})(int, 
 	client := internal.GetRedisClient(ca.serverUrl)
 	return client.SUnionStore(destination, key...)
 }
+
+//****************** sorted set 集合 ***********************
+// ZAdd Adds all the specified members with the specified scores to the sorted set stored at key
+func (ca *redisCache) ZAdd(key string, score int64, member interface{})(int, error){
+	client := internal.GetRedisClient(ca.serverUrl)
+	return client.ZAdd(key, score, member)
+}
+
+// ZCount Returns the number of elements in the sorted set at key with a score between min and max
+func (ca *redisCache) ZCount(key string, min, max int64)(int, error){
+	client := internal.GetRedisClient(ca.serverUrl)
+	return client.ZCount(key, min, max)
+}

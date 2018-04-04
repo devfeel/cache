@@ -538,6 +538,28 @@ func (rc *RedisClient) SUnionStore(destination string, key ...interface{})(int, 
 	return val, err
 }
 
+//****************** sorted set 集合 ***********************
+
+// ZAdd 将所有指定成员添加到键为key有序集合（sorted set）里面。 添加时可以指定多个分数/成员（score/member）对。
+// 如果指定添加的成员已经是有序集合里面的成员，则会更新改成员的分数（scrore）并更新到正确的排序位置
+func (rc *RedisClient) ZAdd(key string, score int64, member interface{}) (int, error){
+	conn := rc.pool.Get()
+	defer conn.Close()
+	args := append([]interface{}{key}, score, member)
+	val, err := redis.Int(conn.Do("ZADD", args...))
+	return val, err
+}
+
+// ZCount 返回有序集key中，score值在min和max之间(默认包括score值等于min或max)的成员
+func (rc *RedisClient) ZCount(key string, min, max int64)(int, error){
+	conn := rc.pool.Get()
+	defer conn.Close()
+	args := append([]interface{}{key}, min, max)
+	val, err := redis.Int(conn.Do("ZCOUNT", args...))
+	return val, err
+}
+
+
 //****************** 全局操作 ***********************
 // DBSize 返回当前数据库的 key 的数量
 func (rc *RedisClient) DBSize()(int, error){

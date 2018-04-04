@@ -8,7 +8,21 @@ import (
 var rc *redisCache
 
 func init() {
-	rc = NewRedisCache("127.0.0.1:6379")
+	rc = NewRedisCache("redis://192.168.8.175:6379/0")
+}
+
+
+func TestRedisCache_ZAdd(t *testing.T){
+	fmt.Println(rc.ZAdd("dottest", 1, 1))
+}
+
+func TestRedisCache_ZCount(t *testing.T){
+	rc.ZAdd("dottest", 1, 1)
+	rc.ZAdd("dottest", 2, 2)
+	rc.ZAdd("dottest", 3, 3)
+	rc.ZAdd("dottest", 10,10)
+	rc.ZAdd("dottest", 11, 11)
+	fmt.Println(rc.ZCount("dottest", 1, 10))
 }
 
 func TestRedisCache_HDel(t *testing.T) {

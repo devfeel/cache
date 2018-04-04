@@ -1,5 +1,8 @@
 ## cache版本记录：
 
+#### Version 0.3
+* RedisCache新增ZAdd、ZCount接口
+* 2018-04-04 17:00
 
 #### Version 0.2
 * RedisCache新增GetJsonObj、SetJsonObj接口

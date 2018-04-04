@@ -4,6 +4,7 @@ import (
 	"github.com/devfeel/cache/redis"
 	"github.com/devfeel/cache/runtime"
 	"sync"
+	"github.com/devfeel/cache/internal"
 )
 
 const (
@@ -76,7 +77,7 @@ type (
 		// HVals Returns all values in the hash stored at key
 		HVals(hashID string) ([]string, error)
 		// GetJsonObj get obj with SetJsonObj key
-		GetJsonObj(key string, result interface{})error
+		GetJsonObj(key string, result interface{}) error
 		// SetJsonObj set obj use json encode string
 		SetJsonObj(key string, val interface{}) (interface{}, error)
 
@@ -148,8 +149,13 @@ type (
 		SUnion(key ...interface{}) ([]string, error)
 		// SUnionStore This command is equal to SUNION, but instead of returning the resulting set, it is stored in destination
 		SUnionStore(destination string, key ...interface{}) (int, error)
-	}
 
+		/*---------- sorted set -----------*/
+		// ZAdd Adds all the specified members with the specified scores to the sorted set stored at key
+		ZAdd(key string, score int64, member interface{}) (int, error)
+		// ZCount Returns the number of elements in the sorted set at key with a score between min and max
+		ZCount(key string, min, max int64) (int, error)
+	}
 )
 
 func Must(i interface{}, err error) interface{} {
