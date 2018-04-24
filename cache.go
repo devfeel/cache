@@ -154,6 +154,10 @@ type (
 		ZAdd(key string, score int64, member interface{}) (int, error)
 		// ZCount Returns the number of elements in the sorted set at key with a score between min and max
 		ZCount(key string, min, max int64) (int, error)
+
+		//****************** lua scripts *********************
+		// EVAL used to evaluate scripts using the Lua interpreter built into Redis starting from version 2.6.0
+		EVAL(script string, argsNum int, arg ...string) (int, error)
 	}
 )
 
