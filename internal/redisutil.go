@@ -559,6 +559,16 @@ func (rc *RedisClient) ZCount(key string, min, max int64)(int, error){
 	return val, err
 }
 
+//****************** lua scripts *********************
+// EVAL 使用内置的 Lua 解释器
+func (rc * RedisClient) EVAL(script string, argsNum int, arg ...string)(int,error){
+	conn := rc.pool.Get()
+	defer conn.Close()
+	args := append([]interface{}{script, argsNum}, arg)
+	val, err := redis.Int(conn.Do("EVAL", args...))
+	return val, err
+}
+
 
 //****************** 全局操作 ***********************
 // DBSize 返回当前数据库的 key 的数量
