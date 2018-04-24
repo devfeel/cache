@@ -561,7 +561,7 @@ func (rc *RedisClient) ZCount(key string, min, max int64)(int, error){
 
 //****************** lua scripts *********************
 // EVAL 使用内置的 Lua 解释器
-func (rc * RedisClient) EVAL(script string, argsNum int, arg ...string)(string,error){
+func (rc * RedisClient) EVAL(script string, argsNum int, arg ...string)([][]byte,error){
 	conn := rc.pool.Get()
 	defer conn.Close()
 	var args []interface{}
@@ -571,7 +571,7 @@ func (rc * RedisClient) EVAL(script string, argsNum int, arg ...string)(string,e
 		args = append([]interface{}{script, argsNum})
 	}
 	args = append([]interface{}{script, argsNum}, arg)
-	val, err := redis.String(conn.Do("EVAL", args...))
+	val, err := redis.ByteSlices(conn.Do("EVAL", args...))
 	return val, err
 }
 

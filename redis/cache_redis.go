@@ -382,7 +382,7 @@ func (ca *redisCache) ZCount(key string, min, max int64)(int, error){
 
 //****************** lua scripts *********************
 // EVAL used to evaluate scripts using the Lua interpreter built into Redis starting from version 2.6.0
-func (ca *redisCache) EVAL(script string, argsNum int, arg ...string)(string, error){
+func (ca *redisCache) EVAL(script string, argsNum int, arg ...string)([][]byte, error){
 	client := internal.GetRedisClient(ca.serverUrl)
 	return client.EVAL(script, argsNum, arg...)
 }
