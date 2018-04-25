@@ -216,7 +216,7 @@ func (rc *RedisClient) HMGet(hashID string, field ...interface{}) ([]string, err
 	conn := rc.pool.Get()
 	defer conn.Close()
 	args := append([]interface{}{hashID}, field...)
-	reply, err := redis.Strings(conn.Do("HMGET", args))
+	reply, err := redis.Strings(conn.Do("HMGET", args...))
 	return reply, err
 }
 
