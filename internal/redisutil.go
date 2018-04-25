@@ -559,6 +559,24 @@ func (rc *RedisClient) ZCount(key string, min, max int64)(int, error){
 	return val, err
 }
 
+// ZRange Returns the specified range of elements in the sorted set stored at key
+func (rc *RedisClient) ZRange(key string, start, stop int64)([]string, error){
+	conn := rc.pool.Get()
+	defer conn.Close()
+	args := append([]interface{}{key}, start, stop)
+	val, err := redis.Strings(conn.Do("ZRANGE", args...))
+	return val, err
+}
+
+// ZRange Returns the specified range of elements in the sorted set stored at key
+func (rc *RedisClient) ZRevRange(key string, start, stop int64)([]string, error){
+	conn := rc.pool.Get()
+	defer conn.Close()
+	args := append([]interface{}{key}, start, stop)
+	val, err := redis.Strings(conn.Do("ZREVRANGE", args...))
+	return val, err
+}
+
 //****************** lua scripts *********************
 // EVAL 使用内置的 Lua 解释器
 func (rc * RedisClient) EVAL(script string, argsNum int, arg ...string)(interface{},error){

@@ -380,6 +380,18 @@ func (ca *redisCache) ZCount(key string, min, max int64)(int, error){
 	return client.ZCount(key, min, max)
 }
 
+// ZRange Returns the specified range of elements in the sorted set stored at key
+func (ca *redisCache) ZRange(key string, start, stop int64)([]string, error){
+	client := internal.GetRedisClient(ca.serverUrl)
+	return client.ZRange(key, start, stop)
+}
+
+// ZRange Returns the specified range of elements in the sorted set stored at key
+func (ca *redisCache) ZRevRange(key string, start, stop int64)([]string, error){
+	client := internal.GetRedisClient(ca.serverUrl)
+	return client.ZRevRange(key, start, stop)
+}
+
 //****************** lua scripts *********************
 // EVAL used to evaluate scripts using the Lua interpreter built into Redis starting from version 2.6.0
 func (ca *redisCache) EVAL(script string, argsNum int, arg ...string)(interface{}, error){

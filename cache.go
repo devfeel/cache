@@ -4,6 +4,7 @@ import (
 	"github.com/devfeel/cache/redis"
 	"github.com/devfeel/cache/runtime"
 	"sync"
+	"github.com/devfeel/cache/internal"
 )
 
 const (
@@ -154,6 +155,10 @@ type (
 		ZAdd(key string, score int64, member interface{}) (int, error)
 		// ZCount Returns the number of elements in the sorted set at key with a score between min and max
 		ZCount(key string, min, max int64) (int, error)
+		// ZRange Returns the specified range of elements in the sorted set stored at key
+		ZRange(key string, start, stop int64)([]string, error)
+		// ZRange Returns the specified range of elements in the sorted set stored at key
+		ZRevRange(key string, start, stop int64)([]string, error)
 
 		//****************** lua scripts *********************
 		// EVAL used to evaluate scripts using the Lua interpreter built into Redis starting from version 2.6.0
