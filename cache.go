@@ -154,6 +154,8 @@ type (
 		ZAdd(key string, score int64, member interface{}) (int, error)
 		// ZCount Returns the number of elements in the sorted set at key with a score between min and max
 		ZCount(key string, min, max int64) (int, error)
+		// ZCard Returns the sorted set cardinality (number of elements) of the sorted set stored at key.
+		ZCard(key string)(int, error)
 		// ZRange Returns the specified range of elements in the sorted set stored at key
 		ZRange(key string, start, stop int64)([]string, error)
 		// ZRange Returns the specified range of elements in the sorted set stored at key

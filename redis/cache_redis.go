@@ -380,6 +380,12 @@ func (ca *redisCache) ZCount(key string, min, max int64)(int, error){
 	return client.ZCount(key, min, max)
 }
 
+// ZCard Returns the sorted set cardinality (number of elements) of the sorted set stored at key.
+func (ca *redisCache) ZCard(key string)(int, error){
+	client := internal.GetRedisClient(ca.serverUrl)
+	return client.ZCard(key)
+}
+
 // ZRange Returns the specified range of elements in the sorted set stored at key
 func (ca *redisCache) ZRange(key string, start, stop int64)([]string, error){
 	client := internal.GetRedisClient(ca.serverUrl)

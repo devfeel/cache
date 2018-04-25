@@ -559,6 +559,15 @@ func (rc *RedisClient) ZCount(key string, min, max int64)(int, error){
 	return val, err
 }
 
+// ZCard 返回key的有序集元素个数
+func (rc *RedisClient) ZCard(key string)(int, error){
+	conn := rc.pool.Get()
+	defer conn.Close()
+	args := append([]interface{}{key})
+	val, err := redis.Int(conn.Do("ZCARD", args...))
+	return val, err
+}
+
 // ZRange Returns the specified range of elements in the sorted set stored at key
 func (rc *RedisClient) ZRange(key string, start, stop int64)([]string, error){
 	conn := rc.pool.Get()
