@@ -212,11 +212,11 @@ func (rc *RedisClient) HGet(hashID string, field string) (string, error) {
 }
 
 // HMGet 返回 key 指定的哈希集中指定字段的值
-func (rc *RedisClient) HMGet(hashID string, field ...string) ([]string, error) {
+func (rc *RedisClient) HMGet(hashID string, field ...interface{}) ([]string, error) {
 	conn := rc.pool.Get()
 	defer conn.Close()
-	args := append([]string{hashID}, field...)
-	reply, err := redis.Strings(conn.Do("HGETALL", args))
+	args := append([]interface{}{hashID}, field...)
+	reply, err := redis.Strings(conn.Do("HMGET", args))
 	return reply, err
 }
 
