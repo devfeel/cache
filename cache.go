@@ -54,6 +54,8 @@ type (
 		/*---------- Hash -----------*/
 		// HGet Returns the value associated with field in the hash stored at key.
 		HGet(hashID string, field string) (string, error)
+		// HMGet Returns the values associated with the specified fields in the hash stored at key.
+		HMGet(hashID string, field ...interface{}) (map[string]string, error)
 		// HSet Sets field in the hash stored at key to value. If key does not exist, a new key holding a hash is created.
 		// If field already exists in the hash, it is overwritten.
 		HSet(hashID string, field string, val string) error

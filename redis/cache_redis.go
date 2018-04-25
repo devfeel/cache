@@ -146,6 +146,15 @@ func (ca *redisCache) HGet(key, field string) (string, error) {
 	client := internal.GetRedisClient(ca.serverUrl)
 	return client.HGet(key, field)
 }
+
+
+// HMGet Returns the values associated with the specified fields in the hash stored at key.
+func (ca *redisCache) HMGet(hashID string, field ...interface{}) (map[string]string, error) {
+	client := internal.GetRedisClient(ca.serverUrl)
+	return client.HMGet(hashID, field...)
+}
+
+
 // HGetAll Returns all fields and values of the hash stored at key
 func (ca *redisCache) HGetAll(key string) (map[string]string, error) {
 	client := internal.GetRedisClient(ca.serverUrl)

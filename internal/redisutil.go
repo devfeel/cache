@@ -100,18 +100,6 @@ func (rc *RedisClient) Del(key ...interface{}) (int, error) {
 	return val, err
 }
 
-//获取指定hashset的内容
-func (rc *RedisClient) HGet(hashID string, field string) (string, error) {
-	conn := rc.pool.Get()
-	defer conn.Close()
-	reply, errDo := conn.Do("HGET", hashID, field)
-	if errDo == nil && reply == nil {
-		return "", nil
-	}
-	val, err := redis.String(reply, errDo)
-	return val, err
-}
-
 //对存储在指定key的数值执行原子的加1操作
 func (rc *RedisClient) INCR(key string) (int, error) {
 	conn := rc.pool.Get()
@@ -210,6 +198,28 @@ func (rc *RedisClient) HGetAll(hashID string) (map[string]string, error) {
 	reply, err := redis.StringMap(conn.Do("HGETALL", hashID))
 	return reply, err
 }
+
+//获取指定hashset的内容
+func (rc *RedisClient) HGet(hashID string, field string) (string, error) {
+	conn := rc.pool.Get()
+	defer conn.Close()
+	reply, errDo := conn.Do("HGET", hashID, field)
+	if errDo == nil && reply == nil {
+		return "", nil
+	}
+	val, err := redis.String(reply, errDo)
+	return val, err
+}
+
+// HMGet 返回 key 指定的哈希集中指定字段的值
+func (rc *RedisClient) HMGet(hashID string, field ...interface{}) (map[string]string, error) {
+	conn := rc.pool.Get()
+	defer conn.Close()
+	args := append([]interface{}{hashID}, field...)
+	reply, err := redis.StringMap(conn.Do("HGETALL", args))
+	return reply, err
+}
+
 
 //设置指定hashset的内容
 func (rc *RedisClient) HSet(hashID string, field string, val string) error {

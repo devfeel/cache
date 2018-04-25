@@ -1,8 +1,8 @@
 ## cache版本记录：
 
 #### Version 0.5
-* RedisCache新增ZRange、ZRevRange、ZCard接口
-* 2018-04-25 17:00
+* RedisCache新增ZRange、ZRevRange、ZCard、HMGet接口
+* 2018-04-25 20:00
 
 #### Version 0.4
 * RedisCache新增EVAL接口
