@@ -165,7 +165,7 @@ type (
 
 		//****************** lua scripts *********************
 		// EVAL used to evaluate scripts using the Lua interpreter built into Redis starting from version 2.6.0
-		EVAL(script string, argsNum int, arg ...string) (interface{}, error)
+		EVAL(script string, argsNum int, arg ...interface{}) (interface{}, error)
 	}
 )
 

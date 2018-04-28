@@ -598,7 +598,7 @@ func (rc *RedisClient) ZRevRange(key string, start, stop int64)([]string, error)
 
 //****************** lua scripts *********************
 // EVAL 使用内置的 Lua 解释器
-func (rc * RedisClient) EVAL(script string, argsNum int, arg ...string)(interface{},error){
+func (rc * RedisClient) EVAL(script string, argsNum int, arg ...interface{})(interface{},error){
 	conn := rc.pool.Get()
 	defer conn.Close()
 	var args []interface{}

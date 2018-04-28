@@ -409,7 +409,7 @@ func (ca *redisCache) ZRevRange(key string, start, stop int64)([]string, error){
 
 //****************** lua scripts *********************
 // EVAL used to evaluate scripts using the Lua interpreter built into Redis starting from version 2.6.0
-func (ca *redisCache) EVAL(script string, argsNum int, arg ...string)(interface{}, error){
+func (ca *redisCache) EVAL(script string, argsNum int, arg ...interface{})(interface{}, error){
 	client := internal.GetRedisClient(ca.serverUrl)
 	return client.EVAL(script, argsNum, arg...)
 }
