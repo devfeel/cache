@@ -604,11 +604,11 @@ func (rc * RedisClient) EVAL(script string, argsNum int, arg ...interface{})(int
 	defer conn.Close()
 	var args []interface{}
 	if len(arg) > 0{
-		args = append([]interface{}{script, argsNum}, arg)
+		args = append([]interface{}{script, argsNum}, arg...)
 	}else{
 		args = append([]interface{}{script, argsNum})
 	}
-	args = append([]interface{}{script, argsNum}, arg)
+	args = append([]interface{}{script, argsNum}, arg...)
 	val, err := conn.Do("EVAL", args...)
 	return val, err
 }
