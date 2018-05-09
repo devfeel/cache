@@ -5,7 +5,6 @@ import (
 	"github.com/garyburd/redigo/redis"
 	"sync"
 	"encoding/json"
-	"fmt"
 )
 
 type RedisClient struct {
