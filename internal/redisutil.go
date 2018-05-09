@@ -30,7 +30,6 @@ func init() {
 // 重写生成连接池方法
 // redisURL: connection string, like "redis://:password@10.0.1.11:6379/0"
 func newPool(redisURL string, maxIdle, maxActive int) *redis.Pool {
-	fmt.Println(redisURL, maxIdle, maxActive)
 	return &redis.Pool{
 		MaxIdle:   maxIdle,
 		MaxActive: maxActive, // max number of connections
