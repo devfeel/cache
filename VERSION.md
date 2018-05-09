@@ -1,5 +1,11 @@
 ## cache版本记录：
 
+
+#### Version 0.6
+* 新增GetRedisCachePoolConf接口，用于需要设置连接池配置的场景
+* 默认GetRedisCache与GetCache使用redis时，连接池设置默认使用RedisConnPool_MaxIdle, RedisConnPool_MaxActive
+* 2018-05-09 18:00
+
 #### Version 0.5
 * RedisCache新增ZRange、ZRevRange、ZCard、HMGet接口
 * 2018-04-25 20:00

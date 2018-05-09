@@ -5,6 +5,7 @@ import (
 	"github.com/garyburd/redigo/redis"
 	"sync"
 	"encoding/json"
+	"fmt"
 )
 
 type RedisClient struct {
@@ -28,10 +29,11 @@ func init() {
 
 // 重写生成连接池方法
 // redisURL: connection string, like "redis://:password@10.0.1.11:6379/0"
-func newPool(redisURL string) *redis.Pool {
+func newPool(redisURL string, maxIdle, maxActive int) *redis.Pool {
+	fmt.Println(redisURL, maxIdle, maxActive)
 	return &redis.Pool{
-		MaxIdle:   5,
-		MaxActive: 20, // max number of connections
+		MaxIdle:   maxIdle,
+		MaxActive: maxActive, // max number of connections
 		Dial: func() (redis.Conn, error) {
 			c, err := redis.DialURL(redisURL)
 			return c, err
@@ -40,21 +42,22 @@ func newPool(redisURL string) *redis.Pool {
 }
 
 
-//获取指定Address的RedisClient
-func GetRedisClient(address string) *RedisClient {
+//获取指定Address及连接池设置的RedisClient
+func GetRedisClient(address string, maxIdle int, maxActive int) *RedisClient {
 	var redis *RedisClient
 	var mok bool
 	mapMutex.RLock()
 	redis, mok = redisMap[address]
 	mapMutex.RUnlock()
 	if !mok {
-		redis = &RedisClient{Address: address, pool: newPool(address)}
+		redis = &RedisClient{Address: address, pool: newPool(address, maxIdle, maxActive)}
 		mapMutex.Lock()
 		redisMap[address] = redis
 		mapMutex.Unlock()
 	}
 	return redis
 }
+
 
 //获取指定key的内容, interface{}
 func (rc *RedisClient) GetObj(key string) (interface{}, error) {

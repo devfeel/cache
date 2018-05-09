@@ -11,6 +11,11 @@ const (
 	CacheType_Redis     = "redis"
 )
 
+const(
+	RedisConnPool_MaxIdle = 5
+	RedisConnPool_MaxActive = 20
+)
+
 var (
 	runtime_cache  Cache
 	redisCacheMap  map[string]RedisCache
@@ -200,12 +205,25 @@ func GetRuntimeCache() Cache {
 	return runtime_cache
 }
 
+
 //get redis cache
 //must set serverIp like "redis://:password@10.0.1.11:6379/0"
 func GetRedisCache(serverUrl string) RedisCache {
+	return GetRedisCachePoolConf(serverUrl, RedisConnPool_MaxIdle, RedisConnPool_MaxActive)
+}
+
+//get redis cache
+//must set serverIp like "redis://:password@10.0.1.11:6379/0"
+func GetRedisCachePoolConf(serverUrl string, maxIdle int, maxActive int) RedisCache {
+	if maxIdle <= 0{
+		maxIdle = RedisConnPool_MaxIdle
+	}
+	if maxActive < 0{
+		maxActive = RedisConnPool_MaxActive
+	}
 	c, ok := redisCacheMap[serverUrl]
 	if !ok {
-		c = NewRedisCache(serverUrl)
+		c = NewRedisCache(serverUrl, maxIdle, maxActive)
 		redisCacheLock.Lock()
 		redisCacheMap[serverUrl] = c
 		redisCacheLock.Unlock()
@@ -224,7 +242,8 @@ func NewRuntimeCache() Cache {
 
 //new redis cache
 //must set serverIp like "redis://:password@10.0.1.11:6379/0"
-func NewRedisCache(serverUrl string) RedisCache {
-	return redis.NewRedisCache(serverUrl)
+func NewRedisCache(serverUrl string, maxIdle int, maxActive int) RedisCache {
+	return redis.NewRedisCache(serverUrl, maxIdle, maxActive)
 }
+
 
