@@ -110,8 +110,13 @@ func (ca *redisCache) GetInt64(key string) (int64, error) {
 // Set cache to redis.
 // ttl is second, if ttl is 0, it will be forever.
 func (ca *redisCache) Set(key string, value interface{}, ttl int64) error {
+	var err error
 	client := internal.GetRedisClient(ca.serverUrl, ca.maxIdle, ca.maxActive)
-	_, err := client.SetWithExpire(key, value, ttl)
+	if ttl > 0{
+		_, err = client.SetWithExpire(key, value, ttl)
+	}else{
+		_, err = client.Set(key, value)
+	}
 	return err
 }
 

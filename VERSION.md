@@ -1,5 +1,8 @@
 ## cache版本记录：
 
+#### Version 0.6.1
+* Bug Fixed：cache_redis issue #5 当ttl设置为0时，redis会返回“ERR invalid expire time in set”，不是forever
+* 2018-05-30 09:00
 
 #### Version 0.6
 * 新增GetRedisCachePoolConf接口，用于需要设置连接池配置的场景

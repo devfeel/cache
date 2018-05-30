@@ -8,12 +8,16 @@ import (
 var rc *redisCache
 
 func init() {
-	rc = NewRedisCache("redis://192.168.8.175:6379/0")
+	rc = NewRedisCache("redis://192.168.8.175:6379/0", 20, 20)
 }
 
 
 func TestRedisCache_ZAdd(t *testing.T){
 	fmt.Println(rc.ZAdd("dottest", 1, 1))
+}
+
+func TestRedisCache_Set(t *testing.T) {
+	fmt.Println(rc.Set("dottest", 1, 0))
 }
 
 func TestRedisCache_ZCount(t *testing.T){
