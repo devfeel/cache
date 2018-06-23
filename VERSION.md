@@ -1,5 +1,10 @@
 ## cache版本记录：
 
+#### Version 0.6.2
+* New feature: Cache add Expire, used to set expire time on key
+* Support RuntimeCache & RedisCache
+* 2018-06-23 21:00
+
 #### Version 0.6.1
 * Bug Fixed：cache_redis issue #5 当ttl设置为0时，redis会返回“ERR invalid expire time in set”，不是forever
 * 2018-05-30 09:00

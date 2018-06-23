@@ -221,6 +221,22 @@ func (ca *RuntimeCache) Delete(key string) error {
 	return nil
 }
 
+// Expire Set a timeout on key. After the timeout has expired, the key will automatically be deleted.
+// timeout time duration is second
+// if not exists key, return 0, nil
+func (ca *RuntimeCache) Expire(key string, timeOutSeconds int) (int, error){
+	item, ok := ca.getRuntimeItem(key)
+	if !ok {
+		return 0, nil
+	}else{
+		item.ttl = time.Duration(timeOutSeconds) * time.Second
+		ca.Lock()
+		ca.items[key] = item
+		ca.Unlock()
+		return timeOutSeconds, nil
+	}
+}
+
 // ClearAll will delete all item in runtime cache.
 func (ca *RuntimeCache) ClearAll() error {
 	ca.Lock()
@@ -241,17 +257,24 @@ func (ca *RuntimeCache) gc() {
 	}
 }
 
-// itemExpired returns true if an item is expired.
-func (ca *RuntimeCache) itemExpired(name string) bool {
-	ca.Lock()
-	defer ca.Unlock()
+// getRuntimeItem get RuntimeItem by key
+func (ca *RuntimeCache) getRuntimeItem(key string) (*RuntimeItem, bool){
+	ca.RLock()
+	defer ca.RUnlock()
+	item, ok := ca.items[key]
+	return item, ok
+}
 
-	itm, ok := ca.items[name]
+// itemExpired returns true if an item is expired.
+func (ca *RuntimeCache) itemExpired(key string) bool {
+	itm, ok := ca.getRuntimeItem(key)
 	if !ok {
 		return true
 	}
 	if itm.isExpire() {
-		delete(ca.items, name)
+		ca.Lock()
+		delete(ca.items, key)
+		ca.Unlock()
 		return true
 	}
 	return false

@@ -128,6 +128,12 @@ func (ca *redisCache) Delete(key string) error {
 	return err
 }
 
+// Expire Set a timeout on key. After the timeout has expired, the key will automatically be deleted.
+func (ca *redisCache) Expire(key string, timeOutSeconds int) (int, error){
+	client := internal.GetRedisClient(ca.serverUrl, ca.maxIdle, ca.maxActive)
+	return client.Expire(key, timeOutSeconds)
+}
+
 // ClearAll will delete all item in redis cache.
 // never error
 func (ca *redisCache) ClearAll() error {
