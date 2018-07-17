@@ -51,6 +51,9 @@ type (
 		Delete(key string) error
 		// ClearAll clear all cache items
 		ClearAll() error
+		// Expire Set a timeout on key. After the timeout has expired, the key will automatically be deleted.
+		// timeout time duration is second
+		Expire(key string, timeOutSeconds int) (int, error)
 	}
 
 	RedisCache interface {

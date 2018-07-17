@@ -15,6 +15,9 @@ func main() {
 	fmt.Println(c2.GetString("1"))
 
 	redisServer := "redis://192.168.8.175:6379/0"
+	redisCache := cache.GetRedisCache("redis://192.168.8.175:6379/0")
+	redisCache.HSet("hsettest", "keytest", "1")
+	redisCache.Expire("hsettest", 60)
 	cr := cache.GetRedisCachePoolConf(redisServer, 10, 100)
 	cr.Set("1", 1, 100)
 	fmt.Println(cache.Must(cr.GetString("1")))
