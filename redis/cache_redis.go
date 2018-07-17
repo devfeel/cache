@@ -399,6 +399,12 @@ func (ca *redisCache) ZCount(key string, min, max int64)(int, error){
 	return client.ZCount(key, min, max)
 }
 
+// ZRem Removes the specified members from the sorted set stored at key. Non existing members are ignored.
+func (ca *redisCache) ZRem(key string, member... interface{})(int, error){
+	client := internal.GetRedisClient(ca.serverUrl, ca.maxIdle, ca.maxActive)
+	return client.ZRem(key, member...)
+}
+
 // ZCard Returns the sorted set cardinality (number of elements) of the sorted set stored at key.
 func (ca *redisCache) ZCard(key string)(int, error){
 	client := internal.GetRedisClient(ca.serverUrl, ca.maxIdle, ca.maxActive)

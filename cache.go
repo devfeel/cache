@@ -161,6 +161,8 @@ type (
 		ZAdd(key string, score int64, member interface{}) (int, error)
 		// ZCount Returns the number of elements in the sorted set at key with a score between min and max
 		ZCount(key string, min, max int64) (int, error)
+		// ZRem Removes the specified members from the sorted set stored at key. Non existing members are ignored.
+		ZRem(key string, member... interface{})(int, error)
 		// ZCard Returns the sorted set cardinality (number of elements) of the sorted set stored at key.
 		ZCard(key string)(int, error)
 		// ZRange Returns the specified range of elements in the sorted set stored at key

@@ -570,6 +570,17 @@ func (rc *RedisClient) ZCount(key string, min, max int64)(int, error){
 	return val, err
 }
 
+
+// ZRem 从排序的集合中删除一个或多个成员
+// 当key存在，但是其不是有序集合类型，就返回一个错误。
+func (rc *RedisClient) ZRem(key string, member... interface{})(int, error){
+	conn := rc.pool.Get()
+	defer conn.Close()
+	args := append([]interface{}{key}, member)
+	val, err := redis.Int(conn.Do("ZREM", args...))
+	return val, err
+}
+
 // ZCard 返回key的有序集元素个数
 func (rc *RedisClient) ZCard(key string)(int, error){
 	conn := rc.pool.Get()

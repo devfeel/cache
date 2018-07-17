@@ -1,5 +1,9 @@
 ## cache版本记录：
 
+#### Version 0.6.2
+* New Command: ZRem(key string, member... interface{})(int, error)
+* 2018-07-17 13:00
+
 #### Version 0.6.1
 * Bug Fixed：cache_redis issue #5 当ttl设置为0时，redis会返回“ERR invalid expire time in set”，不是forever
 * 2018-05-30 09:00
