@@ -168,8 +168,12 @@ type (
 		ZRem(key string, member... interface{})(int, error)
 		// ZCard Returns the sorted set cardinality (number of elements) of the sorted set stored at key.
 		ZCard(key string)(int, error)
+		// ZRank Returns the rank of member in the sorted set stored at key, with the scores ordered from low to high
+		ZRank(key, member string) (int, error)
 		// ZRange Returns the specified range of elements in the sorted set stored at key
 		ZRange(key string, start, stop int64)([]string, error)
+		// ZRangeByScore Returns all the elements in the sorted set at key with a score between min and max (including elements with score equal to min or max).
+		ZRangeByScore(key string, start, stop string)([]string, error)
 		// ZRange Returns the specified range of elements in the sorted set stored at key
 		ZRevRange(key string, start, stop int64)([]string, error)
 

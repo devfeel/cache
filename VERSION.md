@@ -1,5 +1,10 @@
 ## cache版本记录：
 
+#### Version 0.6.4
+* New Command: ZRank(key, member string) (int, error)
+* New Command: ZRangeByScore(key string, start, stop string)([]string, error)
+* 2018-07-25 14:00
+
 #### Version 0.6.3
 * New Command: ZRem(key string, member... interface{})(int, error)
 * 2018-07-17 13:00

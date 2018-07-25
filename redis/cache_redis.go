@@ -417,10 +417,23 @@ func (ca *redisCache) ZCard(key string)(int, error){
 	return client.ZCard(key)
 }
 
+
+// ZRank Returns the rank of member in the sorted set stored at key, with the scores ordered from low to high
+func (ca *redisCache) ZRank(key, member string) (int, error){
+	client := internal.GetRedisClient(ca.serverUrl, ca.maxIdle, ca.maxActive)
+	return client.ZRank(key, member)
+}
+
 // ZRange Returns the specified range of elements in the sorted set stored at key
 func (ca *redisCache) ZRange(key string, start, stop int64)([]string, error){
 	client := internal.GetRedisClient(ca.serverUrl, ca.maxIdle, ca.maxActive)
 	return client.ZRange(key, start, stop)
+}
+
+// ZRangeByScore Returns all the elements in the sorted set at key with a score between min and max (including elements with score equal to min or max).
+func (ca *redisCache) ZRangeByScore(key string, start, stop string)([]string, error){
+	client := internal.GetRedisClient(ca.serverUrl, ca.maxIdle, ca.maxActive)
+	return client.ZRangeByScore(key, start, stop)
 }
 
 // ZRange Returns the specified range of elements in the sorted set stored at key

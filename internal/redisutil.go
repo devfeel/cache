@@ -590,12 +590,30 @@ func (rc *RedisClient) ZCard(key string)(int, error){
 	return val, err
 }
 
+// ZRank 返回有序集key中成员member的排名
+func (rc *RedisClient) ZRank(key, member string) (int, error){
+	conn := rc.pool.Get()
+	defer conn.Close()
+	args := append([]interface{}{key}, member)
+	val, err := redis.Int(conn.Do("ZRANK", args...))
+	return val, err
+}
+
 // ZRange Returns the specified range of elements in the sorted set stored at key
 func (rc *RedisClient) ZRange(key string, start, stop int64)([]string, error){
 	conn := rc.pool.Get()
 	defer conn.Close()
 	args := append([]interface{}{key}, start, stop)
 	val, err := redis.Strings(conn.Do("ZRANGE", args...))
+	return val, err
+}
+
+// ZRangeByScore Returns all the elements in the sorted set at key with a score between min and max (including elements with score equal to min or max).
+func (rc *RedisClient) ZRangeByScore(key string, start, stop string)([]string, error){
+	conn := rc.pool.Get()
+	defer conn.Close()
+	args := append([]interface{}{key}, start, stop)
+	val, err := redis.Strings(conn.Do("ZRANGEBYSCORE", args...))
 	return val, err
 }
 
