@@ -1,5 +1,9 @@
 ## cache版本记录：
 
+#### Version 0.6.5
+* Update Command: ZRangeByScore(key string, start, stop string, isWithScores bool)([]string, error)
+* 2018-07-26 18:00
+
 #### Version 0.6.4
 * New Command: ZRank(key, member string) (int, error)
 * New Command: ZRangeByScore(key string, start, stop string)([]string, error)

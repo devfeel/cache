@@ -431,9 +431,9 @@ func (ca *redisCache) ZRange(key string, start, stop int64)([]string, error){
 }
 
 // ZRangeByScore Returns all the elements in the sorted set at key with a score between min and max (including elements with score equal to min or max).
-func (ca *redisCache) ZRangeByScore(key string, start, stop string)([]string, error){
+func (ca *redisCache) ZRangeByScore(key string, start, stop string, isWithScores bool)([]string, error){
 	client := internal.GetRedisClient(ca.serverUrl, ca.maxIdle, ca.maxActive)
-	return client.ZRangeByScore(key, start, stop)
+	return client.ZRangeByScore(key, start, stop, isWithScores)
 }
 
 // ZRange Returns the specified range of elements in the sorted set stored at key

@@ -609,10 +609,13 @@ func (rc *RedisClient) ZRange(key string, start, stop int64)([]string, error){
 }
 
 // ZRangeByScore Returns all the elements in the sorted set at key with a score between min and max (including elements with score equal to min or max).
-func (rc *RedisClient) ZRangeByScore(key string, start, stop string)([]string, error){
+func (rc *RedisClient) ZRangeByScore(key string, start, stop string, isWithScores bool)([]string, error){
 	conn := rc.pool.Get()
 	defer conn.Close()
 	args := append([]interface{}{key}, start, stop)
+	if isWithScores{
+		args = append(args, "WITHSCORES")
+	}
 	val, err := redis.Strings(conn.Do("ZRANGEBYSCORE", args...))
 	return val, err
 }

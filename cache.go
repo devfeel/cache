@@ -173,7 +173,7 @@ type (
 		// ZRange Returns the specified range of elements in the sorted set stored at key
 		ZRange(key string, start, stop int64)([]string, error)
 		// ZRangeByScore Returns all the elements in the sorted set at key with a score between min and max (including elements with score equal to min or max).
-		ZRangeByScore(key string, start, stop string)([]string, error)
+		ZRangeByScore(key string, start, stop string, isWithScores bool)([]string, error)
 		// ZRange Returns the specified range of elements in the sorted set stored at key
 		ZRevRange(key string, start, stop int64)([]string, error)
 
