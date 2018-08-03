@@ -3,6 +3,22 @@
 #### Version 0.6.6
 * New Command: RedisCache.Publish(channel string, message interface{})(int64, error)
 * New Command: RedisCache.Subscribe(receive chan redis.Message, channels ...interface{})error
+* Example:
+```
+func TestRedisCache_Subscribe(t *testing.T) {
+	receive := make(chan Message, 1000)
+	err := rc.Subscribe(receive, "channel-test")
+	if err != nil{
+		t.Error("TestRedisCache_Subscribe error", err)
+	}
+	for{
+		select{
+			case msg := <- receive:
+				fmt.Println(msg.Channel, msg.Data)
+		}
+	}
+}
+```
 * 2018-08-03 11:00
 
 #### Version 0.6.5
