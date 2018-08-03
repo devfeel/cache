@@ -629,6 +629,19 @@ func (rc *RedisClient) ZRevRange(key string, start, stop int64)([]string, error)
 	return val, err
 }
 
+//****************** PUB/SUB *********************
+
+// Publish 将信息 message 发送到指定的频道 channel
+func (rc *RedisClient) Publish(channel string, message interface{})(int64, error){
+	conn := rc.pool.Get()
+	defer conn.Close()
+	var args []interface{}
+	args = append([]interface{}{channel}, message)
+	val, err := redis.Int64(conn.Do("PUBLISH", args...))
+	return val, err
+}
+
+
 //****************** lua scripts *********************
 // EVAL 使用内置的 Lua 解释器
 func (rc * RedisClient) EVAL(script string, argsNum int, arg ...interface{})(interface{},error){

@@ -4,6 +4,8 @@ import (
 	"github.com/devfeel/cache/internal"		//internal目录 不允许其他包调用, commit时候改回来
 	"strconv"
 	"errors"
+	"fmt"
+	"github.com/garyburd/redigo/redis"
 )
 
 var (
@@ -13,6 +15,17 @@ const (
 	LInsert_Before = "BEFORE"
 	LInsert_After = "AFTER"
 )
+
+
+// Message represents a message notification.
+type Message struct {
+	// The originating channel.
+	Channel string
+
+	// The message data.
+	Data []byte
+}
+
 
 
 // RedisCache is redis cache adapter.
@@ -441,6 +454,42 @@ func (ca *redisCache) ZRevRange(key string, start, stop int64)([]string, error){
 	client := internal.GetRedisClient(ca.serverUrl, ca.maxIdle, ca.maxActive)
 	return client.ZRevRange(key, start, stop)
 }
+
+//****************** PUB/SUB *********************
+// Publish Posts a message to the given channel.
+func (ca *redisCache) Publish(channel string, message interface{})(int64, error){
+	client := internal.GetRedisClient(ca.serverUrl, ca.maxIdle, ca.maxActive)
+	return client.Publish(channel, message)
+}
+
+// Subscribe Subscribes the client to the specified channels
+func (ca *redisCache) Subscribe(receive chan Message, channels ...interface{})error{
+	client := internal.GetRedisClient(ca.serverUrl, ca.maxIdle, ca.maxActive)
+	conn := client.GetConn()
+	psc := redis.PubSubConn{Conn:conn}
+	defer func() {
+		conn.Close()
+		psc.Unsubscribe(channels...)
+	} ()
+
+	err := psc.Subscribe(channels...)
+	if err != nil{
+		return err
+	}
+	for {
+		switch v := psc.Receive().(type) {
+		case redis.Message:
+			fmt.Printf("%s: messages: %s\n", v.Channel, v.Data)
+			receive <- Message{Channel:v.Channel, Data:v.Data}
+		case redis.Subscription:
+			fmt.Printf("%s: %s %d\n", v.Channel, v.Kind, v.Count)
+			continue
+		case error:
+			return err
+		}
+	}
+}
+
 
 //****************** lua scripts *********************
 // EVAL used to evaluate scripts using the Lua interpreter built into Redis starting from version 2.6.0

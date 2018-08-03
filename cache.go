@@ -177,6 +177,13 @@ type (
 		// ZRange Returns the specified range of elements in the sorted set stored at key
 		ZRevRange(key string, start, stop int64)([]string, error)
 
+		//****************** PUB/SUB *********************
+		// Publish Posts a message to the given channel.
+		Publish(channel string, message interface{})(int64, error)
+
+		// Subscribe Subscribes the client to the specified channels
+		Subscribe(receive chan redis.Message, channels ...interface{})error
+
 		//****************** lua scripts *********************
 		// EVAL used to evaluate scripts using the Lua interpreter built into Redis starting from version 2.6.0
 		EVAL(script string, argsNum int, arg ...interface{}) (interface{}, error)

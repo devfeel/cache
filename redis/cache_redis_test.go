@@ -11,6 +11,24 @@ func init() {
 	rc = NewRedisCache("redis://192.168.8.175:6379/0", 20, 20)
 }
 
+func TestRedisCache_Publish(t *testing.T) {
+	fmt.Println(rc.Publish("channel-test", "test message"))
+}
+
+func TestRedisCache_Subscribe(t *testing.T) {
+	receive := make(chan Message, 1000)
+	err := rc.Subscribe(receive, "channel-test")
+	if err != nil{
+		t.Error("TestRedisCache_Subscribe error", err)
+	}
+	for{
+		select{
+			case msg := <- receive:
+				fmt.Println(msg.Channel, msg.Data)
+		}
+	}
+}
+
 
 func TestRedisCache_ZAdd(t *testing.T){
 	fmt.Println(rc.ZAdd("dottest", 1, 1))

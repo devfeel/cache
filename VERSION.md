@@ -1,5 +1,10 @@
 ## cache版本记录：
 
+#### Version 0.6.6
+* New Command: RedisCache.Publish(channel string, message interface{})(int64, error)
+* New Command: RedisCache.Subscribe(receive chan redis.Message, channels ...interface{})error
+* 2018-08-03 11:00
+
 #### Version 0.6.5
 * Update Command: ZRangeByScore(key string, start, stop string, isWithScores bool)([]string, error)
 * 2018-07-26 18:00
