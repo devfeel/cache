@@ -4,7 +4,7 @@
 * New Command: RedisCache.Publish(channel string, message interface{})(int64, error)
 * New Command: RedisCache.Subscribe(receive chan redis.Message, channels ...interface{})error
 * Example:
-```
+``` golang
 func TestRedisCache_Subscribe(t *testing.T) {
 	receive := make(chan Message, 1000)
 	err := rc.Subscribe(receive, "channel-test")
