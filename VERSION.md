@@ -9,12 +9,12 @@
 * 3. if set BackupServer, if read command conn server failed, will auto use this config
 * Example:
 ``` golang
-	redisServer := "redis://192.168.8.175:6329/0"
-	readOnlyServer := "redis://192.168.8.175:6339/0"
-	backupRedisServer := "redis://192.168.8.175:6379/0"
-	redisCache := cache.GetRedisCachePoolConf(redisServer, 10, 100)
-    redisCache.SetReadOnlyServer(readOnlyServer, 10, 100)
-    redisCache.SetBackupServer(backupRedisServer, 10, 100)
+redisServer := "redis://192.168.8.175:6329/0"
+readOnlyServer := "redis://192.168.8.175:6339/0"
+backupRedisServer := "redis://192.168.8.175:6379/0"
+redisCache := cache.GetRedisCachePoolConf(redisServer, 10, 100)
+redisCache.SetReadOnlyServer(readOnlyServer, 10, 100)
+redisCache.SetBackupServer(backupRedisServer, 10, 100)
 ```
 * 2018-08-16 11:00
 
