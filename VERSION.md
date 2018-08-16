@@ -2,7 +2,7 @@
 
 #### Version 0.7
 
-- New Feature: RedisCache add BackupServer\ReadOnlyServer
+-New Feature: RedisCache add BackupServer\ReadOnlyServer
 - you can use SetReadOnlyServer or SetBackupServer to set redis info
 -  Detail:
 -  1、if set ReadOnlyServer, all read command will use this server config
