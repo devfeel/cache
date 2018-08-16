@@ -1,6 +1,7 @@
 ## cache版本记录：
 
 #### Version 0.7
+
 - New Feature: RedisCache add BackupServer\ReadOnlyServer
 - you can use SetReadOnlyServer or SetBackupServer to set redis info
 -  Detail:
