@@ -1,13 +1,13 @@
 ## cache版本记录：
 
 #### Version 0.7
-* New Feature: RedisCache add BackupServer\ReadOnlyServer
-* you can use SetReadOnlyServer or SetBackupServer to set redis info
-* Detail:
-* 1. if set ReadOnlyServer, all read command will use this server config
-* 2. BackupServer only can use to read command
-* 3. if set BackupServer, if read command conn server failed, will auto use this config
-* Example:
+  New Feature: RedisCache add BackupServer\ReadOnlyServer
+  you can use SetReadOnlyServer or SetBackupServer to set redis info
+  Detail:
+  1 if set ReadOnlyServer, all read command will use this server config
+  2 BackupServer only can use to read command
+  3 if set BackupServer, if read command conn server failed, will auto use this config
+  Example:
 ``` golang
 redisServer := "redis://192.168.8.175:6329/0"
 readOnlyServer := "redis://192.168.8.175:6339/0"
@@ -16,7 +16,7 @@ redisCache := cache.GetRedisCachePoolConf(redisServer, 10, 100)
 redisCache.SetReadOnlyServer(readOnlyServer, 10, 100)
 redisCache.SetBackupServer(backupRedisServer, 10, 100)
 ```
-* 2018-08-16 11:00
+    2018-08-16 11:00
 
 #### Version 0.6.6
 * New Command: RedisCache.Publish(channel string, message interface{})(int64, error)
