@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/garyburd/redigo/redis"
+	"strings"
 )
 
 var (
@@ -31,12 +32,25 @@ type Message struct {
 // RedisCache is redis cache adapter.
 // it contains serverIp for redis conn.
 type redisCache struct {
+
+	isUseBackup bool
+
 	serverUrl string //connection string, like "redis://:password@10.0.1.11:6379/0"
 	// Maximum number of idle connections in the pool.
 	maxIdle int
 	// Maximum number of connections allocated by the pool at a given time.
 	// When zero, there is no limit on the number of connections in the pool.
 	maxActive int
+
+	//use to readonly server
+	readOnlyServerUrl string
+	readOnlyMaxIdle int
+	readOnlyMaxActive int
+
+	//use to backup server
+	backupServerUrl string
+	backupMaxIdle int
+	backupMaxActive int
 }
 
 // NewRedisCache returns a new *RedisCache.
@@ -45,16 +59,35 @@ func NewRedisCache(serverUrl string, maxIdle int, maxActive int) *redisCache {
 	return &cache
 }
 
+// SetReadOnlyServer set readonly redis server
+func (ca *redisCache) SetReadOnlyServer(serverUrl string, maxIdle int, maxActive int){
+	ca.readOnlyServerUrl = serverUrl
+	ca.readOnlyMaxActive = maxActive
+	ca.readOnlyMaxIdle = maxIdle
+}
+
+
+// SetBackupServer set backup redis server, only use to read
+func (ca *redisCache) SetBackupServer(serverUrl string, maxIdle int, maxActive int){
+	ca.backupServerUrl = serverUrl
+	ca.backupMaxActive = maxActive
+	ca.backupMaxIdle = maxIdle
+}
+
 // Exists check item exist in redis cache.
 func (ca *redisCache) Exists(key string) (bool, error) {
-	client := internal.GetRedisClient(ca.serverUrl, ca.maxIdle, ca.maxActive)
+	client := ca.getReadRedisClient()
 	exists, err := client.Exists(key)
+	if checkIsConnError(err){
+		client = ca.getBackupRedis()
+		return client.Exists(key)
+	}
 	return exists, err
 }
 
 // Incr increase int64 counter in redis cache.
 func (ca *redisCache) Incr(key string) (int64, error) {
-	client := internal.GetRedisClient(ca.serverUrl, ca.maxIdle, ca.maxActive)
+	client := ca.getDefaultRedis()
 	val, err := client.INCR(key)
 	if err != nil {
 		return 0, err
@@ -64,7 +97,7 @@ func (ca *redisCache) Incr(key string) (int64, error) {
 
 // Decr decrease counter in redis cache.
 func (ca *redisCache) Decr(key string) (int64, error) {
-	client := internal.GetRedisClient(ca.serverUrl, ca.maxIdle, ca.maxActive)
+	client := ca.getDefaultRedis()
 	val, err := client.DECR(key)
 	if err != nil {
 		return 0, err
@@ -75,16 +108,24 @@ func (ca *redisCache) Decr(key string) (int64, error) {
 // Get cache from redis cache.
 // if non-existed or expired, return nil.
 func (ca *redisCache) Get(key string) (interface{}, error) {
-	client := internal.GetRedisClient(ca.serverUrl, ca.maxIdle, ca.maxActive)
+	client := ca.getReadRedisClient()
 	reply, err := client.GetObj(key)
+	if checkIsConnError(err){
+		client = ca.getBackupRedis()
+		return client.GetObj(key)
+	}
 	return reply, err
 }
 
 // GetString returns value string format by given key
 // if non-existed or expired, return "".
 func (ca *redisCache) GetString(key string) (string, error) {
-	client := internal.GetRedisClient(ca.serverUrl, ca.maxIdle, ca.maxActive)
+	client := ca.getReadRedisClient()
 	reply, err := client.Get(key)
+	if checkIsConnError(err){
+		client = ca.getBackupRedis()
+		return client.Get(key)
+	}
 	return reply, err
 }
 
@@ -157,8 +198,12 @@ func (ca *redisCache) ClearAll() error {
 
 // GetJsonObj get obj with SetJsonObj key
 func (ca *redisCache) GetJsonObj(key string, result interface{})error {
-	client := internal.GetRedisClient(ca.serverUrl, ca.maxIdle, ca.maxActive)
+	client := ca.getReadRedisClient()
 	err := client.GetJsonObj(key, result)
+	if checkIsConnError(err){
+		client = ca.getBackupRedis()
+		return client.GetJsonObj(key, result)
+	}
 	return err
 }
 
@@ -172,22 +217,37 @@ func (ca *redisCache) SetJsonObj(key string, val interface{}) (interface{}, erro
 /*---------- Hash -----------*/
 // HGet Returns the value associated with field in the hash stored at key.
 func (ca *redisCache) HGet(key, field string) (string, error) {
-	client := internal.GetRedisClient(ca.serverUrl, ca.maxIdle, ca.maxActive)
-	return client.HGet(key, field)
+	client := ca.getReadRedisClient()
+	reply, err := client.HGet(key, field)
+	if checkIsConnError(err){
+		client = ca.getBackupRedis()
+		return client.HGet(key, field)
+	}
+	return reply, err
 }
 
 
 // HMGet Returns the values associated with the specified fields in the hash stored at key.
 func (ca *redisCache) HMGet(hashID string, field ...interface{}) ([]string, error) {
-	client := internal.GetRedisClient(ca.serverUrl, ca.maxIdle, ca.maxActive)
-	return client.HMGet(hashID, field...)
+	client := ca.getReadRedisClient()
+	reply, err := client.HMGet(hashID, field...)
+	if checkIsConnError(err){
+		client = ca.getBackupRedis()
+		return client.HMGet(hashID, field...)
+	}
+	return reply, err
 }
 
 
 // HGetAll Returns all fields and values of the hash stored at key
 func (ca *redisCache) HGetAll(key string) (map[string]string, error) {
-	client := internal.GetRedisClient(ca.serverUrl, ca.maxIdle, ca.maxActive)
-	return client.HGetAll(key)
+	client := ca.getReadRedisClient()
+	reply, err := client.HGetAll(key)
+	if checkIsConnError(err){
+		client = ca.getBackupRedis()
+		return client.HGetAll(key)
+	}
+	return reply, err
 }
 // HSet Sets field in the hash stored at key to value. If key does not exist, a new key holding a hash is created.
 // If field already exists in the hash, it is overwritten.
@@ -202,8 +262,13 @@ func (ca *redisCache) HDel(key string, field ...interface{}) (int, error){
 }
 // HExists Returns if field is an existing field in the hash stored at key
 func (ca *redisCache) HExists (key string, field string) (int, error){
-	client := internal.GetRedisClient(ca.serverUrl, ca.maxIdle, ca.maxActive)
-	return client.HExist(key, field)
+	client := ca.getReadRedisClient()
+	reply, err := client.HExist(key, field)
+	if checkIsConnError(err){
+		client = ca.getBackupRedis()
+		return client.HExist(key, field)
+	}
+	return reply, err
 }
 // HSetNX Sets field in the hash stored at key to value, only if field does not yet exist
 func (ca *redisCache) HSetNX(key string, field string, value string) (string, error){
@@ -222,18 +287,33 @@ func (ca *redisCache) HIncrByFloat(key string, field string, increment float64) 
 }
 // HKeys Returns all field names in the hash stored at key.
 func (ca *redisCache) HKeys(key string) ([]string, error){
-	client := internal.GetRedisClient(ca.serverUrl, ca.maxIdle, ca.maxActive)
-	return client.HKeys(key)
+	client := ca.getReadRedisClient()
+	reply, err := client.HKeys(key)
+	if checkIsConnError(err){
+		client = ca.getBackupRedis()
+		return client.HKeys(key)
+	}
+	return reply, err
 }
 // HLen Returns the number of fields contained in the hash stored at key
 func (ca *redisCache) HLen(key string) (int, error){
-	client := internal.GetRedisClient(ca.serverUrl, ca.maxIdle, ca.maxActive)
-	return client.HLen(key)
+	client := ca.getReadRedisClient()
+	reply, err := client.HLen(key)
+	if checkIsConnError(err){
+		client = ca.getBackupRedis()
+		return client.HLen(key)
+	}
+	return reply, err
 }
 // HVals Returns all values in the hash stored at key
 func (ca *redisCache) HVals(key string) ([]string, error){
-	client := internal.GetRedisClient(ca.serverUrl, ca.maxIdle, ca.maxActive)
-	return client.HVals(key)
+	client := ca.getReadRedisClient()
+	reply, err := client.HVals(key)
+	if checkIsConnError(err){
+		client = ca.getBackupRedis()
+		return client.HVals(key)
+	}
+	return reply, err
 }
 
 /*---------- List -----------*/
@@ -356,23 +436,43 @@ func (ca *redisCache) SDiffStore(destination string, key ...interface{})(int, er
 }
 // SInter Returns the members of the set resulting from the intersection of all the given sets.
 func (ca *redisCache) SInter(key ...interface{})([]string, error){
-	client := internal.GetRedisClient(ca.serverUrl, ca.maxIdle, ca.maxActive)
-	return client.SInter(key...)
+	client := ca.getReadRedisClient()
+	reply, err := client.SInter(key...)
+	if checkIsConnError(err){
+		client = ca.getBackupRedis()
+		return client.SInter(key...)
+	}
+	return reply, err
 }
 // SInterStore This command is equal to SINTER, but instead of returning the resulting set, it is stored in destination
 func (ca *redisCache) SInterStore(destination string, key ...interface{})(int, error){
-	client := internal.GetRedisClient(ca.serverUrl, ca.maxIdle, ca.maxActive)
-	return client.SInterStore(destination, key...)
+	client := ca.getReadRedisClient()
+	reply, err := client.SInterStore(destination, key...)
+	if checkIsConnError(err){
+		client = ca.getBackupRedis()
+		return client.SInterStore(destination, key...)
+	}
+	return reply, err
 }
 // SIsMember Returns if member is a member of the set stored at key.
 func (ca *redisCache) SIsMember(key string, member string)(bool, error){
-	client := internal.GetRedisClient(ca.serverUrl, ca.maxIdle, ca.maxActive)
-	return client.SIsMember(key, member)
+	client := ca.getReadRedisClient()
+	reply, err := client.SIsMember(key, member)
+	if checkIsConnError(err){
+		client = ca.getBackupRedis()
+		return client.SIsMember(key, member)
+	}
+	return reply, err
 }
 // SMembers Returns all the members of the set value stored at key.
 func (ca *redisCache) SMembers(key string)([]string, error){
-	client := internal.GetRedisClient(ca.serverUrl, ca.maxIdle, ca.maxActive)
-	return client.SMembers(key)
+	client := ca.getReadRedisClient()
+	reply, err := client.SMembers(key)
+	if checkIsConnError(err){
+		client = ca.getBackupRedis()
+		return client.SMembers(key)
+	}
+	return reply, err
 }
 // SMove Move member from the set at source to the set at destination
 func (ca *redisCache) SMove(source string, destination string, member string)(bool, error){
@@ -386,8 +486,13 @@ func (ca *redisCache) SPop(key string)(string, error){
 }
 // SRandMember When called with just the key argument, return a random element from the set value stored at key
 func (ca *redisCache) SRandMember(key string, count int)([]string, error){
-	client := internal.GetRedisClient(ca.serverUrl, ca.maxIdle, ca.maxActive)
-	return client.SRandMember(key, count)
+	client := ca.getReadRedisClient()
+	reply, err := client.SRandMember(key, count)
+	if checkIsConnError(err){
+		client = ca.getBackupRedis()
+		return client.SRandMember(key, count)
+	}
+	return reply, err
 }
 // SRem Remove the specified members from the set stored at key
 func (ca *redisCache) SRem(key string, member ...interface{})(int, error){
@@ -396,8 +501,13 @@ func (ca *redisCache) SRem(key string, member ...interface{})(int, error){
 }
 // SUnion Returns the members of the set resulting from the union of all the given sets
 func (ca *redisCache)  SUnion(key ...interface{})([]string, error){
-	client := internal.GetRedisClient(ca.serverUrl, ca.maxIdle, ca.maxActive)
-	return client.SUnion(key...)
+	client := ca.getReadRedisClient()
+	reply, err := client.SUnion(key...)
+	if checkIsConnError(err){
+		client = ca.getBackupRedis()
+		return client.SUnion(key...)
+	}
+	return reply, err
 }
 // SUnionStore This command is equal to SUNION, but instead of returning the resulting set, it is stored in destination
 func (ca *redisCache)  SUnionStore(destination string, key ...interface{})(int, error){
@@ -414,8 +524,13 @@ func (ca *redisCache) ZAdd(key string, score int64, member interface{})(int, err
 
 // ZCount Returns the number of elements in the sorted set at key with a score between min and max
 func (ca *redisCache) ZCount(key string, min, max int64)(int, error){
-	client := internal.GetRedisClient(ca.serverUrl, ca.maxIdle, ca.maxActive)
-	return client.ZCount(key, min, max)
+	client := ca.getReadRedisClient()
+	reply, err := client.ZCount(key, min, max)
+	if checkIsConnError(err){
+		client = ca.getBackupRedis()
+		return client.ZCount(key, min, max)
+	}
+	return reply, err
 }
 
 // ZRem Removes the specified members from the sorted set stored at key. Non existing members are ignored.
@@ -426,33 +541,58 @@ func (ca *redisCache) ZRem(key string, member... interface{})(int, error){
 
 // ZCard Returns the sorted set cardinality (number of elements) of the sorted set stored at key.
 func (ca *redisCache) ZCard(key string)(int, error){
-	client := internal.GetRedisClient(ca.serverUrl, ca.maxIdle, ca.maxActive)
-	return client.ZCard(key)
+	client := ca.getReadRedisClient()
+	reply, err := client.ZCard(key)
+	if checkIsConnError(err){
+		client = ca.getBackupRedis()
+		return client.ZCard(key)
+	}
+	return reply, err
 }
 
 
 // ZRank Returns the rank of member in the sorted set stored at key, with the scores ordered from low to high
 func (ca *redisCache) ZRank(key, member string) (int, error){
-	client := internal.GetRedisClient(ca.serverUrl, ca.maxIdle, ca.maxActive)
-	return client.ZRank(key, member)
+	client := ca.getReadRedisClient()
+	reply, err := client.ZRank(key, member)
+	if checkIsConnError(err){
+		client = ca.getBackupRedis()
+		return client.ZRank(key, member)
+	}
+	return reply, err
 }
 
 // ZRange Returns the specified range of elements in the sorted set stored at key
 func (ca *redisCache) ZRange(key string, start, stop int64)([]string, error){
-	client := internal.GetRedisClient(ca.serverUrl, ca.maxIdle, ca.maxActive)
-	return client.ZRange(key, start, stop)
+	client := ca.getReadRedisClient()
+	reply, err := client.ZRange(key, start, stop)
+	if checkIsConnError(err){
+		client = ca.getBackupRedis()
+		return client.ZRange(key, start, stop)
+	}
+	return reply, err
 }
 
 // ZRangeByScore Returns all the elements in the sorted set at key with a score between min and max (including elements with score equal to min or max).
 func (ca *redisCache) ZRangeByScore(key string, start, stop string, isWithScores bool)([]string, error){
-	client := internal.GetRedisClient(ca.serverUrl, ca.maxIdle, ca.maxActive)
-	return client.ZRangeByScore(key, start, stop, isWithScores)
+	client := ca.getReadRedisClient()
+	reply, err := client.ZRangeByScore(key, start, stop, isWithScores)
+	if checkIsConnError(err){
+		client = ca.getBackupRedis()
+		return client.ZRangeByScore(key, start, stop, isWithScores)
+	}
+	return reply, err
 }
 
 // ZRange Returns the specified range of elements in the sorted set stored at key
 func (ca *redisCache) ZRevRange(key string, start, stop int64)([]string, error){
-	client := internal.GetRedisClient(ca.serverUrl, ca.maxIdle, ca.maxActive)
-	return client.ZRevRange(key, start, stop)
+	client := ca.getReadRedisClient()
+	reply, err := client.ZRevRange(key, start, stop)
+	if checkIsConnError(err){
+		client = ca.getBackupRedis()
+		return client.ZRevRange(key, start, stop)
+	}
+	return reply, err
 }
 
 //****************** PUB/SUB *********************
@@ -496,4 +636,40 @@ func (ca *redisCache) Subscribe(receive chan Message, channels ...interface{})er
 func (ca *redisCache) EVAL(script string, argsNum int, arg ...interface{})(interface{}, error){
 	client := internal.GetRedisClient(ca.serverUrl, ca.maxIdle, ca.maxActive)
 	return client.EVAL(script, argsNum, arg...)
+}
+
+// getReadRedisClient get read mode redis client
+func (ca *redisCache) getReadRedisClient() *internal.RedisClient{
+	if ca.isUseBackup{
+		if ca.backupServerUrl != "" {
+			return ca.getBackupRedis()
+		}
+	}else{
+		if ca.readOnlyServerUrl != ""{
+			return ca.getReadOnlyRedis()
+		}
+	}
+	return ca.getDefaultRedis()
+}
+
+func (ca *redisCache) getDefaultRedis() *internal.RedisClient{
+	return internal.GetRedisClient(ca.serverUrl, ca.maxIdle, ca.maxActive)
+}
+
+func (ca *redisCache) getBackupRedis() *internal.RedisClient{
+	return internal.GetRedisClient(ca.backupServerUrl, ca.backupMaxIdle, ca.backupMaxActive)
+}
+
+func (ca *redisCache) getReadOnlyRedis() *internal.RedisClient{
+	return internal.GetRedisClient(ca.readOnlyServerUrl, ca.readOnlyMaxIdle, ca.readOnlyMaxActive)
+}
+
+func checkIsConnError(err error) bool{
+	if err == nil{
+		return false
+	}
+	if strings.Index(err.Error(), "no such host") >= 0 || strings.Index(err.Error(), "No connection could be made because the target machine actively refused it") >= 0 {
+		return true
+	}
+	return false
 }

@@ -58,6 +58,10 @@ type (
 
 	RedisCache interface {
 		Cache
+		// SetReadOnlyServer set readonly redis server
+		SetReadOnlyServer(serverUrl string, maxIdle int, maxActive int)
+		// SetBackupServer set backup redis server, only use to read
+		SetBackupServer(serverUrl string, maxIdle int, maxActive int)
 
 		/*---------- Hash -----------*/
 		// HGet Returns the value associated with field in the hash stored at key.
