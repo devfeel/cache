@@ -8,35 +8,35 @@
 * 2、BackupServer only can use to read command
 * 3、if set BackupServer, if read command conn server failed, will auto use this config
 * Example:
-``` golang
-redisServer := "redis://192.168.8.175:6329/0"
-readOnlyServer := "redis://192.168.8.175:6339/0"
-backupRedisServer := "redis://192.168.8.175:6379/0"
-redisCache := cache.GetRedisCachePoolConf(redisServer, 10, 100)
-redisCache.SetReadOnlyServer(readOnlyServer, 10, 100)
-redisCache.SetBackupServer(backupRedisServer, 10, 100)
-```
+    ``` golang
+    redisServer := "redis://192.168.8.175:6329/0"
+    readOnlyServer := "redis://192.168.8.175:6339/0"
+    backupRedisServer := "redis://192.168.8.175:6379/0"
+    redisCache := cache.GetRedisCachePoolConf(redisServer, 10, 100)
+    redisCache.SetReadOnlyServer(readOnlyServer, 10, 100)
+    redisCache.SetBackupServer(backupRedisServer, 10, 100)
+    ```
 * 2018-08-16 11:00
 
 #### Version 0.6.6
 * New Command: RedisCache.Publish(channel string, message interface{})(int64, error)
 * New Command: RedisCache.Subscribe(receive chan redis.Message, channels ...interface{})error
 * Example:
-``` golang
-func TestRedisCache_Subscribe(t *testing.T) {
-	receive := make(chan Message, 1000)
-	err := rc.Subscribe(receive, "channel-test")
-	if err != nil{
-		t.Error("TestRedisCache_Subscribe error", err)
-	}
-	for{
-		select{
-			case msg := <- receive:
-				fmt.Println(msg.Channel, msg.Data)
-		}
-	}
-}
-```
+    ``` golang
+    func TestRedisCache_Subscribe(t *testing.T) {
+        receive := make(chan Message, 1000)
+        err := rc.Subscribe(receive, "channel-test")
+        if err != nil{
+            t.Error("TestRedisCache_Subscribe error", err)
+        }
+        for{
+            select{
+                case msg := <- receive:
+                    fmt.Println(msg.Channel, msg.Data)
+            }
+        }
+    }
+    ```
 * 2018-08-03 11:00
 
 #### Version 0.6.5
