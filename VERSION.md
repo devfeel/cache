@@ -5,8 +5,9 @@
 - New Feature: Add hystrix module
 - New Feature: RedisCache ReadOnly\Backup add hystrix check
 - Detail:
--   1、if set ReadOnlyServer, hystrix only check readonly server conn
--   2、if only set DefaultServer and BackupServer, hystrix only check default server conn
+-   1、hystrix only use to read command
+-   2、if set ReadOnlyServer, hystrix only check readonly server conn
+-   3、if only set DefaultServer and BackupServer, hystrix only check default server conn
 -  2018-08-17 15:00
 
 #### Version 0.7
