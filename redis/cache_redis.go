@@ -702,6 +702,7 @@ func (ca *redisCache) getReadRedisClient() *internal.RedisClient{
 	return ca.getDefaultRedis()
 }
 
+// getRedisClient get default redis client
 func (ca *redisCache) getDefaultRedis() *internal.RedisClient{
 	return internal.GetRedisClient(ca.serverUrl, ca.maxIdle, ca.maxActive)
 }
@@ -726,6 +727,9 @@ func (ca *redisCache) checkConnErrorAndNeedRetry(err error) bool{
 		ca.hystrix.GetCounter().Inc(1)
 		//if is hystrix, not to retry, because in getReadRedisClient already use backUp redis
 		if ca.hystrix.IsHystrix(){
+			return false
+		}
+		if ca.backupServerUrl == ""{
 			return false
 		}
 		return true
