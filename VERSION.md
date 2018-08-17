@@ -1,5 +1,14 @@
 ## cache版本记录：
 
+
+#### Version 0.7.1
+- New Feature: Add hystrix module
+- New Feature: RedisCache ReadOnly\Backup add hystrix check
+- Detail:
+-   1、if set ReadOnlyServer, hystrix only check readonly server conn
+-   2、if only set DefaultServer and BackupServer, hystrix only check default server conn
+-  2018-08-17 15:00
+
 #### Version 0.7
 - New Feature: RedisCache add BackupServer\ReadOnlyServer
 - you can use SetReadOnlyServer or SetBackupServer to set redis info

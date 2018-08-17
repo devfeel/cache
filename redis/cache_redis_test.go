@@ -29,6 +29,9 @@ func TestRedisCache_Subscribe(t *testing.T) {
 	}
 }
 
+func TestRedisCache_Ping(t *testing.T) {
+	fmt.Println(rc.Ping)
+}
 
 func TestRedisCache_ZAdd(t *testing.T){
 	fmt.Println(rc.ZAdd("dottest", 1, 1))

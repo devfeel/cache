@@ -8,7 +8,15 @@ import (
 
 var rc *RedisClient
 func init() {
-	rc = GetRedisClient("127.0.0.1:6379")
+	rc = GetRedisClient("redis://192.168.8.175:6379/0", 10, 10)
+}
+
+func TestRedisClient_Ping(t *testing.T) {
+	res, err :=rc.Ping()
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	fmt.Println(res, reflect.TypeOf(res))
 }
 
 func TestRedisClient_Del(t *testing.T) {

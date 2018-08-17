@@ -12,6 +12,8 @@ type RedisClient struct {
 	Address string
 }
 
+var OnConnError func()
+
 var (
 	redisMap map[string]*RedisClient
 	mapMutex *sync.RWMutex
@@ -63,7 +65,7 @@ func (rc *RedisClient) GetObj(key string) (interface{}, error) {
 	conn := rc.pool.Get()
 	// 连接完关闭，其实没有关闭，是放回池里，也就是队列里面，等待下一个重用
 	defer conn.Close()
-	reply, errDo := conn.Do("GET", key)
+	reply, errDo := innerDo(conn, "GET", key)
 	return reply, errDo
 }
 
@@ -79,7 +81,7 @@ func (rc *RedisClient) Exists(key string) (bool, error) {
 	conn := rc.pool.Get()
 	// 连接完关闭，其实没有关闭，是放回池里，也就是队列里面，等待下一个重用
 	defer conn.Close()
-	reply, errDo := conn.Do("EXISTS", key)
+	reply, errDo := innerDo(conn, "EXISTS", key)
 	if errDo == nil && reply == nil {
 		return false, nil
 	}
@@ -105,7 +107,7 @@ func (rc *RedisClient) Del(key ...interface{}) (int, error) {
 func (rc *RedisClient) INCR(key string) (int, error) {
 	conn := rc.pool.Get()
 	defer conn.Close()
-	reply, errDo := conn.Do("INCR", key)
+	reply, errDo := innerDo(conn, "INCR", key)
 	if errDo == nil && reply == nil {
 		return 0, nil
 	}
@@ -117,7 +119,7 @@ func (rc *RedisClient) INCR(key string) (int, error) {
 func (rc *RedisClient) DECR(key string) (int, error) {
 	conn := rc.pool.Get()
 	defer conn.Close()
-	reply, errDo := conn.Do("DECR", key)
+	reply, errDo := innerDo(conn, "DECR", key)
 	if errDo == nil && reply == nil {
 		return 0, nil
 	}
@@ -128,7 +130,7 @@ func (rc *RedisClient) DECR(key string) (int, error) {
 func (rc *RedisClient) Set(key string, val interface{}) (interface{}, error) {
 	conn := rc.pool.Get()
 	defer conn.Close()
-	val, err := conn.Do("SET", key, val)
+	val, err := innerDo(conn, "SET", key, val)
 	return val, err
 }
 
@@ -136,7 +138,7 @@ func (rc *RedisClient) Set(key string, val interface{}) (interface{}, error) {
 func (rc *RedisClient) SetWithExpire(key string, val interface{}, timeOutSeconds int64) (interface{}, error) {
 	conn := rc.pool.Get()
 	defer conn.Close()
-	val, err := conn.Do("SET", key, val, "EX", timeOutSeconds)
+	val, err := innerDo(conn, "SET", key, val, "EX", timeOutSeconds)
 	return val, err
 }
 
@@ -146,7 +148,7 @@ func (rc *RedisClient) SetNX(key, value string) (int, error){
 	conn := rc.pool.Get()
 	defer conn.Close()
 
-	val, err := redis.Int(conn.Do("SETNX", key, value))
+	val, err := redis.Int(innerDo(conn, "SETNX", key, value))
 	return val, err
 }
 
@@ -154,7 +156,7 @@ func (rc *RedisClient) SetNX(key, value string) (int, error){
 func (rc *RedisClient) Expire(key string, timeOutSeconds int) (int, error) {
 	conn := rc.pool.Get()
 	defer conn.Close()
-	val, err := redis.Int(conn.Do("EXPIRE", key, timeOutSeconds))
+	val, err := redis.Int(innerDo(conn, "EXPIRE", key, timeOutSeconds))
 	return val, err
 }
 
@@ -177,7 +179,7 @@ func (rc *RedisClient) SetJsonObj(key string, val interface{}) (interface{}, err
 	if err != nil{
 		return nil, err
 	}
-	reply, err := redis.String(conn.Do("SET", key, jsonStr))
+	reply, err := redis.String(innerDo(conn, "SET", key, jsonStr))
 	return reply, err
 }
 
@@ -196,7 +198,7 @@ func (rc *RedisClient) FlushDB() {
 func (rc *RedisClient) HGetAll(hashID string) (map[string]string, error) {
 	conn := rc.pool.Get()
 	defer conn.Close()
-	reply, err := redis.StringMap(conn.Do("HGETALL", hashID))
+	reply, err := redis.StringMap(innerDo(conn, "HGETALL", hashID))
 	return reply, err
 }
 
@@ -217,7 +219,7 @@ func (rc *RedisClient) HMGet(hashID string, field ...interface{}) ([]string, err
 	conn := rc.pool.Get()
 	defer conn.Close()
 	args := append([]interface{}{hashID}, field...)
-	reply, err := redis.Strings(conn.Do("HMGET", args...))
+	reply, err := redis.Strings(innerDo(conn, "HMGET", args...))
 	return reply, err
 }
 
@@ -226,14 +228,14 @@ func (rc *RedisClient) HMGet(hashID string, field ...interface{}) ([]string, err
 func (rc *RedisClient) HSet(hashID string, field string, val string) error {
 	conn := rc.pool.Get()
 	defer conn.Close()
-	_, err := conn.Do("HSET", hashID, field, val)
+	_, err := innerDo(conn, "HSET", hashID, field, val)
 	return err
 }
 
 func (rc *RedisClient) HSetNX(hashID string, field string, val string) (string, error) {
 	conn := rc.pool.Get()
 	defer conn.Close()
-	reply, err := redis.String(conn.Do("HSETNX", hashID, field, val))
+	reply, err := redis.String(innerDo(conn, "HSETNX", hashID, field, val))
 	return reply, err
 }
 
@@ -241,7 +243,7 @@ func (rc *RedisClient) HDel(key string, field ...interface{}) (int, error){
 	conn := rc.pool.Get()
 	defer conn.Close()
 	args := append([]interface{}{key}, field...)
-	val, err := redis.Int(conn.Do("HDEL", args...))
+	val, err := redis.Int(innerDo(conn, "HDEL", args...))
 	return val, err
 }
 
@@ -249,27 +251,27 @@ func (rc *RedisClient) HDel(key string, field ...interface{}) (int, error){
 func (rc *RedisClient) HExist(key string, field string) (int, error){
 	conn := rc.pool.Get()
 	defer conn.Close()
-	val, err := redis.Int(conn.Do("HEXISTS", key, field))
+	val, err := redis.Int(innerDo(conn, "HEXISTS", key, field))
 	return val, err
 }
 func (rc *RedisClient) HIncrBy(key string, field string, increment int)(int, error){
 	conn := rc.pool.Get()
 	defer conn.Close()
-	val, err := redis.Int(conn.Do("HINCRBY", key, field, increment))
+	val, err := redis.Int(innerDo(conn, "HINCRBY", key, field, increment))
 	return val, err
 }
 
 func (rc *RedisClient) HIncrByFloat(key string, field string, increment float64) (float64, error){
 	conn := rc.pool.Get()
 	defer conn.Close()
-	val, err := redis.Float64(conn.Do("HINCRBYFLOAT", key, field, increment))
+	val, err := redis.Float64(innerDo(conn, "HINCRBYFLOAT", key, field, increment))
 	return val, err
 }
 
 func (rc *RedisClient) HKeys(key string)([]string, error){
 	conn := rc.pool.Get()
 	defer conn.Close()
-	val, err := redis.Strings(conn.Do("HKEYS", key))
+	val, err := redis.Strings(innerDo(conn, "HKEYS", key))
 	return val, err
 }
 
@@ -277,7 +279,7 @@ func (rc *RedisClient) HKeys(key string)([]string, error){
 func (rc *RedisClient) HLen(key string) (int, error) {
 	conn := rc.pool.Get()
 	defer conn.Close()
-	val, err := redis.Int(conn.Do("HLEN", key))
+	val, err := redis.Int(innerDo(conn, "HLEN", key))
 	return val, err
 }
 
@@ -285,7 +287,7 @@ func (rc *RedisClient) HLen(key string) (int, error) {
 func (rc *RedisClient) HVals(key string) ([]string, error) {
 	conn := rc.pool.Get()
 	defer conn.Close()
-	val, err := redis.Strings(conn.Do("HVALS", key))
+	val, err := redis.Strings(innerDo(conn, "HVALS", key))
 	return val, err
 }
 
@@ -295,7 +297,7 @@ func (rc *RedisClient) HVals(key string) ([]string, error) {
 func (rc *RedisClient) LPush(key string, value ...interface{}) (int, error) {
 	conn := rc.pool.Get()
 	defer conn.Close()
-	ret, err := redis.Int(conn.Do("LPUSH", key, value))
+	ret, err := redis.Int(innerDo(conn, "LPUSH", key, value))
 	if err != nil {
 		return -1, err
 	} else {
@@ -306,42 +308,42 @@ func (rc *RedisClient) LPush(key string, value ...interface{}) (int, error) {
 func (rc *RedisClient) LPushX(key string, value string) (int, error) {
 	conn := rc.pool.Get()
 	defer conn.Close()
-	resp, err := redis.Int(conn.Do("LPUSHX", key, value))
+	resp, err := redis.Int(innerDo(conn, "LPUSHX", key, value))
 	return resp, err
 }
 
 func (rc *RedisClient) LRange(key string, start int, stop int) ([]string, error){
 	conn := rc.pool.Get()
 	defer conn.Close()
-	resp, err := redis.Strings(conn.Do("LRANGE", key, start, stop))
+	resp, err := redis.Strings(innerDo(conn, "LRANGE", key, start, stop))
 	return resp, err
 }
 
 func (rc *RedisClient) LRem(key string, count int, value string) (int, error){
 	conn := rc.pool.Get()
 	defer conn.Close()
-	resp, err := redis.Int(conn.Do("LREM", key, count, value))
+	resp, err := redis.Int(innerDo(conn, "LREM", key, count, value))
 	return resp, err
 }
 
 func (rc *RedisClient) LSet(key string, index int, value string)(string, error){
 	conn := rc.pool.Get()
 	defer conn.Close()
-	resp, err := redis.String(conn.Do("LSET", key, index, value))
+	resp, err := redis.String(innerDo(conn, "LSET", key, index, value))
 	return resp, err
 }
 
 func (rc *RedisClient) LTrim(key string, start int, stop int) (string, error) {
 	conn := rc.pool.Get()
 	defer conn.Close()
-	resp, err := redis.String(conn.Do("LTRIM", key, start, stop))
+	resp, err := redis.String(innerDo(conn, "LTRIM", key, start, stop))
 	return resp, err
 }
 
 func (rc *RedisClient) RPop(key string) (string, error) {
 	conn := rc.pool.Get()
 	defer conn.Close()
-	resp, err := redis.String(conn.Do("RPOP", key))
+	resp, err := redis.String(innerDo(conn, "RPOP", key))
 	return resp, err
 }
 
@@ -349,7 +351,7 @@ func (rc *RedisClient) RPush(key string, value ...interface{}) (int, error){
 	conn := rc.pool.Get()
 	defer conn.Close()
 	args := append([]interface{}{key}, value...)
-	resp, err := redis.Int(conn.Do("RPUSH", args...))
+	resp, err := redis.Int(innerDo(conn, "RPUSH", args...))
 	return resp, err
 }
 
@@ -357,14 +359,14 @@ func (rc *RedisClient) RPushX(key string, value ...interface{}) (int, error) {
 	conn := rc.pool.Get()
 	defer conn.Close()
 	args := append([]interface{}{key}, value...)
-	resp, err := redis.Int(conn.Do("RPUSHX", args...))
+	resp, err := redis.Int(innerDo(conn, "RPUSHX", args...))
 	return resp, err
 }
 
 func (rc *RedisClient) RPopLPush(source string, destination string)(string, error) {
 	conn := rc.pool.Get()
 	defer conn.Close()
-	resp, err := redis.String(conn.Do("RPOPLPUSH", source, destination))
+	resp, err := redis.String(innerDo(conn, "RPOPLPUSH", source, destination))
 	return resp, err
 }
 
@@ -372,7 +374,7 @@ func (rc *RedisClient) RPopLPush(source string, destination string)(string, erro
 func (rc *RedisClient) BLPop(key ...interface{})(map[string]string, error){
 	conn := rc.pool.Get()
 	defer conn.Close()
-	val, err := redis.StringMap(conn.Do("BLPOP", key, defaultTimeout))
+	val, err := redis.StringMap(innerDo(conn, "BLPOP", key, defaultTimeout))
 	return val, err
 }
 
@@ -380,49 +382,49 @@ func (rc *RedisClient) BLPop(key ...interface{})(map[string]string, error){
 func (rc *RedisClient) BRPop(key ...interface{}) (map[string]string, error) {
 	conn := rc.pool.Get()
 	defer conn.Close()
-	val, err := redis.StringMap(conn.Do("BRPOP", key, defaultTimeout))
+	val, err := redis.StringMap(innerDo(conn, "BRPOP", key, defaultTimeout))
 	return val, err
 }
 
 func (rc *RedisClient) BRPopLPush(source string, destination string)(string, error){
 	conn := rc.pool.Get()
 	defer conn.Close()
-	val, err := redis.String(conn.Do("BRPOPLPUSH", source, destination))
+	val, err := redis.String(innerDo(conn, "BRPOPLPUSH", source, destination))
 	return val, err
 }
 
 func (rc *RedisClient) LIndex(key string, index int)(string, error){
 	conn := rc.pool.Get()
 	defer conn.Close()
-	val, err := redis.String(conn.Do("LINDEX", key, index))
+	val, err := redis.String(innerDo(conn, "LINDEX", key, index))
 	return val, err
 }
 
 func (rc *RedisClient) LInsertBefore(key string, pivot string, value string)(int, error){
 	conn := rc.pool.Get()
 	defer conn.Close()
-	val, err := redis.Int(conn.Do("LINSERT", key, "BEFORE", pivot, value))
+	val, err := redis.Int(innerDo(conn, "LINSERT", key, "BEFORE", pivot, value))
 	return val, err
 }
 
 func (rc *RedisClient) LInsertAfter(key string, pivot string, value string)(int, error){
 	conn := rc.pool.Get()
 	defer conn.Close()
-	val, err := redis.Int(conn.Do("LINSERT", key, "AFTER", pivot, value))
+	val, err := redis.Int(innerDo(conn, "LINSERT", key, "AFTER", pivot, value))
 	return val, err
 }
 
 func (rc *RedisClient) LLen(key string)(int, error){
 	conn := rc.pool.Get()
 	defer conn.Close()
-	val, err := redis.Int(conn.Do("LLEN", key))
+	val, err := redis.Int(innerDo(conn, "LLEN", key))
 	return val, err
 }
 
 func (rc *RedisClient) LPop(key string)(string, error){
 	conn := rc.pool.Get()
 	defer conn.Close()
-	val, err := redis.String(conn.Do("LPOP", key))
+	val, err := redis.String(innerDo(conn, "LPOP", key))
 	return val, err
 }
 
@@ -436,7 +438,7 @@ func (rc *RedisClient) SAdd(key string, member ...interface{}) (int, error){
 	conn := rc.pool.Get()
 	defer conn.Close()
 	args := append([]interface{}{key}, member...)
-	val, err := redis.Int(conn.Do("SADD", args...))
+	val, err := redis.Int(innerDo(conn, "SADD", args...))
 	return val, err
 }
 
@@ -447,7 +449,7 @@ func (rc *RedisClient) SAdd(key string, member ...interface{}) (int, error){
 func (rc *RedisClient) SCard(key string) (int, error) {
 	conn := rc.pool.Get()
 	defer conn.Close()
-	val, err := redis.Int(conn.Do("SCARD", key))
+	val, err := redis.Int(innerDo(conn, "SCARD", key))
 	return val, err
 }
 
@@ -457,7 +459,7 @@ func (rc *RedisClient) SCard(key string) (int, error) {
 func (rc *RedisClient) SPop(key string) (string, error) {
 	conn := rc.pool.Get()
 	defer conn.Close()
-	val, err := redis.String(conn.Do("SPOP", key))
+	val, err := redis.String(innerDo(conn, "SPOP", key))
 	return val, err
 }
 
@@ -467,7 +469,7 @@ func (rc *RedisClient) SPop(key string) (string, error) {
 func (rc *RedisClient) SRandMember(key string, count int) ([]string, error) {
 	conn := rc.pool.Get()
 	defer conn.Close()
-	val, err := redis.Strings(conn.Do("SRANDMEMBER", key, count))
+	val, err := redis.Strings(innerDo(conn, "SRANDMEMBER", key, count))
 	return val, err
 }
 
@@ -478,14 +480,14 @@ func (rc *RedisClient) SRem(key string, member ...interface{}) (int, error) {
 	conn := rc.pool.Get()
 	defer conn.Close()
 	args := append([]interface{}{key}, member...)
-	val, err := redis.Int(conn.Do("SREM", args...))
+	val, err := redis.Int(innerDo(conn, "SREM", args...))
 	return val, err
 }
 
 func (rc *RedisClient) SDiff(key ...interface{}) ([]string, error){
 	conn := rc.pool.Get()
 	defer conn.Close()
-	val, err := redis.Strings(conn.Do("SDIFF", key...))
+	val, err := redis.Strings(innerDo(conn, "SDIFF", key...))
 	return val, err
 }
 
@@ -493,14 +495,14 @@ func (rc *RedisClient) SDiffStore(destination string, key ...interface{}) (int, 
 	conn := rc.pool.Get()
 	defer conn.Close()
 	args := append([]interface{}{destination}, key...)
-	val, err := redis.Int(conn.Do("SDIFFSTORE", args...))
+	val, err := redis.Int(innerDo(conn, "SDIFFSTORE", args...))
 	return val, err
 }
 
 func (rc *RedisClient) SInter(key ...interface{}) ([]string, error){
 	conn := rc.pool.Get()
 	defer conn.Close()
-	val, err := redis.Strings(conn.Do("SINTER", key...))
+	val, err := redis.Strings(innerDo(conn, "SINTER", key...))
 	return val, err
 }
 
@@ -508,21 +510,21 @@ func (rc *RedisClient) SInterStore(destination string, key ...interface{})(int, 
 	conn := rc.pool.Get()
 	defer conn.Close()
 	args := append([]interface{}{destination}, key...)
-	val, err := redis.Int(conn.Do("SINTERSTORE", args...))
+	val, err := redis.Int(innerDo(conn, "SINTERSTORE", args...))
 	return val, err
 }
 
 func (rc *RedisClient) SIsMember(key string, member string) (bool, error){
 	conn := rc.pool.Get()
 	defer conn.Close()
-	val, err := redis.Bool(conn.Do("SISMEMBER", key, member))
+	val, err := redis.Bool(innerDo(conn, "SISMEMBER", key, member))
 	return val, err
 }
 
 func (rc *RedisClient) SMembers(key string) ([]string, error){
 	conn := rc.pool.Get()
 	defer conn.Close()
-	val, err := redis.Strings(conn.Do("SMEMBERS", key))
+	val, err := redis.Strings(innerDo(conn, "SMEMBERS", key))
 	return val, err
 }
 
@@ -530,14 +532,14 @@ func (rc *RedisClient) SMembers(key string) ([]string, error){
 func (rc *RedisClient) SMove(source string, destination string, member string) (bool, error){
 	conn := rc.pool.Get()
 	defer conn.Close()
-	val, err := redis.Bool(conn.Do("SMOVE", source, destination, member))
+	val, err := redis.Bool(innerDo(conn, "SMOVE", source, destination, member))
 	return val, err
 }
 
 func (rc *RedisClient) SUnion(key ...interface{}) ([]string, error){
 	conn := rc.pool.Get()
 	defer conn.Close()
-	val, err := redis.Strings(conn.Do("SUNION", key...))
+	val, err := redis.Strings(innerDo(conn, "SUNION", key...))
 	return val, err
 }
 
@@ -545,7 +547,7 @@ func (rc *RedisClient) SUnionStore(destination string, key ...interface{})(int, 
 	conn := rc.pool.Get()
 	defer conn.Close()
 	args := append([]interface{}{destination}, key...)
-	val, err := redis.Int(conn.Do("SUNIONSTORE", args))
+	val, err := redis.Int(innerDo(conn, "SUNIONSTORE", args))
 	return val, err
 }
 
@@ -557,7 +559,7 @@ func (rc *RedisClient) ZAdd(key string, score int64, member interface{}) (int, e
 	conn := rc.pool.Get()
 	defer conn.Close()
 	args := append([]interface{}{key}, score, member)
-	val, err := redis.Int(conn.Do("ZADD", args...))
+	val, err := redis.Int(innerDo(conn, "ZADD", args...))
 	return val, err
 }
 
@@ -566,7 +568,7 @@ func (rc *RedisClient) ZCount(key string, min, max int64)(int, error){
 	conn := rc.pool.Get()
 	defer conn.Close()
 	args := append([]interface{}{key}, min, max)
-	val, err := redis.Int(conn.Do("ZCOUNT", args...))
+	val, err := redis.Int(innerDo(conn, "ZCOUNT", args...))
 	return val, err
 }
 
@@ -577,7 +579,7 @@ func (rc *RedisClient) ZRem(key string, member... interface{})(int, error){
 	conn := rc.pool.Get()
 	defer conn.Close()
 	args := append([]interface{}{key}, member...)
-	val, err := redis.Int(conn.Do("ZREM", args...))
+	val, err := redis.Int(innerDo(conn, "ZREM", args...))
 	return val, err
 }
 
@@ -586,7 +588,7 @@ func (rc *RedisClient) ZCard(key string)(int, error){
 	conn := rc.pool.Get()
 	defer conn.Close()
 	args := append([]interface{}{key})
-	val, err := redis.Int(conn.Do("ZCARD", args...))
+	val, err := redis.Int(innerDo(conn, "ZCARD", args...))
 	return val, err
 }
 
@@ -595,7 +597,7 @@ func (rc *RedisClient) ZRank(key, member string) (int, error){
 	conn := rc.pool.Get()
 	defer conn.Close()
 	args := append([]interface{}{key}, member)
-	val, err := redis.Int(conn.Do("ZRANK", args...))
+	val, err := redis.Int(innerDo(conn, "ZRANK", args...))
 	return val, err
 }
 
@@ -604,7 +606,7 @@ func (rc *RedisClient) ZRange(key string, start, stop int64)([]string, error){
 	conn := rc.pool.Get()
 	defer conn.Close()
 	args := append([]interface{}{key}, start, stop)
-	val, err := redis.Strings(conn.Do("ZRANGE", args...))
+	val, err := redis.Strings(innerDo(conn, "ZRANGE", args...))
 	return val, err
 }
 
@@ -616,7 +618,7 @@ func (rc *RedisClient) ZRangeByScore(key string, start, stop string, isWithScore
 	if isWithScores{
 		args = append(args, "WITHSCORES")
 	}
-	val, err := redis.Strings(conn.Do("ZRANGEBYSCORE", args...))
+	val, err := redis.Strings(innerDo(conn, "ZRANGEBYSCORE", args...))
 	return val, err
 }
 
@@ -625,7 +627,7 @@ func (rc *RedisClient) ZRevRange(key string, start, stop int64)([]string, error)
 	conn := rc.pool.Get()
 	defer conn.Close()
 	args := append([]interface{}{key}, start, stop)
-	val, err := redis.Strings(conn.Do("ZREVRANGE", args...))
+	val, err := redis.Strings(innerDo(conn, "ZREVRANGE", args...))
 	return val, err
 }
 
@@ -637,7 +639,7 @@ func (rc *RedisClient) Publish(channel string, message interface{})(int64, error
 	defer conn.Close()
 	var args []interface{}
 	args = append([]interface{}{channel}, message)
-	val, err := redis.Int64(conn.Do("PUBLISH", args...))
+	val, err := redis.Int64(innerDo(conn, "PUBLISH", args...))
 	return val, err
 }
 
@@ -654,19 +656,28 @@ func (rc * RedisClient) EVAL(script string, argsNum int, arg ...interface{})(int
 		args = append([]interface{}{script, argsNum})
 	}
 	args = append([]interface{}{script, argsNum}, arg...)
-	val, err := conn.Do("EVAL", args...)
+	val, err := innerDo(conn, "EVAL", args...)
 	return val, err
 }
-
 
 //****************** 全局操作 ***********************
 // DBSize 返回当前数据库的 key 的数量
 func (rc *RedisClient) DBSize()(int, error){
 	conn := rc.pool.Get()
 	defer conn.Close()
-	val, err := redis.Int(conn.Do("DBSIZE"))
+	val, err := redis.Int(innerDo(conn, "DBSIZE"))
 	return val, err
 }
+
+// Ping ping command, if success return pong
+func  (rc * RedisClient) Ping()(string,error){
+	conn := rc.pool.Get()
+	defer conn.Close()
+	var args []interface{}
+	val, err := redis.String(innerDo(conn, "PING", args...))
+	return val, err
+}
+
 
 
 // GetConn 返回一个从连接池获取的redis连接,
@@ -675,6 +686,8 @@ func (rc *RedisClient) GetConn() redis.Conn{
 	return rc.pool.Get()
 }
 
-
-
-
+// Do sends a command to the server and returns the received reply.
+func innerDo(conn redis.Conn, commandName string, args ...interface{}) (interface{}, error){
+	reply, err := conn.Do(commandName, args...)
+	return reply, err
+}
