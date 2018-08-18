@@ -8,11 +8,6 @@ const	(
 	minuteTimeLayout = "200601021504"
 )
 
-
-
-
-
-
 // Counter incremented and decremented base on int64 value.
 type Counter interface {
 	Clear()
