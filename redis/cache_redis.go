@@ -691,13 +691,13 @@ func (ca *redisCache) ClearAll() error {
 
 // getReadRedisClient get read mode redis client
 func (ca *redisCache) getReadRedisClient() *internal.RedisClient{
-	if ca.readOnlyServerUrl != ""{
-		return ca.getReadOnlyRedis()
-	}
 	if ca.hystrix.IsHystrix(){
 		if ca.backupServerUrl != "" {
 			return ca.getBackupRedis()
 		}
+	}
+	if ca.readOnlyServerUrl != ""{
+		return ca.getReadOnlyRedis()
 	}
 	return ca.getDefaultRedis()
 }
