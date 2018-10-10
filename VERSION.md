@@ -1,5 +1,8 @@
 ## cache版本记录：
 
+#### Version 0.7.2
+* New Feature: Add Command - RedisCache.ZREVRangeByScore(key string, max, min string, isWithScores bool)([]string, error)
+-  2018-10-10 15:00
 
 #### Version 0.7.1
 - New Feature: Add hystrix module

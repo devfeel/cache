@@ -7,12 +7,12 @@ import (
 )
 
 const (
-	CacheType_Runtime   = "runtime"
-	CacheType_Redis     = "redis"
+	CacheType_Runtime = "runtime"
+	CacheType_Redis   = "redis"
 )
 
-const(
-	RedisConnPool_MaxIdle = 5
+const (
+	RedisConnPool_MaxIdle   = 5
 	RedisConnPool_MaxActive = 20
 )
 
@@ -169,24 +169,26 @@ type (
 		// ZCount Returns the number of elements in the sorted set at key with a score between min and max
 		ZCount(key string, min, max int64) (int, error)
 		// ZRem Removes the specified members from the sorted set stored at key. Non existing members are ignored.
-		ZRem(key string, member... interface{})(int, error)
+		ZRem(key string, member ...interface{}) (int, error)
 		// ZCard Returns the sorted set cardinality (number of elements) of the sorted set stored at key.
-		ZCard(key string)(int, error)
+		ZCard(key string) (int, error)
 		// ZRank Returns the rank of member in the sorted set stored at key, with the scores ordered from low to high
 		ZRank(key, member string) (int, error)
 		// ZRange Returns the specified range of elements in the sorted set stored at key
-		ZRange(key string, start, stop int64)([]string, error)
+		ZRange(key string, start, stop int64) ([]string, error)
 		// ZRangeByScore Returns all the elements in the sorted set at key with a score between min and max (including elements with score equal to min or max).
-		ZRangeByScore(key string, start, stop string, isWithScores bool)([]string, error)
+		ZRangeByScore(key string, start, stop string, isWithScores bool) ([]string, error)
+		// ZREVRangeByScore Returns all the elements in the sorted set at key with a score between max and min (including elements with score equal to max or min). In contrary to the default ordering of sorted sets, for this command the elements are considered to be ordered from high to low scores.
+		ZREVRangeByScore(key string, max, min string, isWithScores bool) ([]string, error)
 		// ZRange Returns the specified range of elements in the sorted set stored at key
-		ZRevRange(key string, start, stop int64)([]string, error)
+		ZRevRange(key string, start, stop int64) ([]string, error)
 
 		//****************** PUB/SUB *********************
 		// Publish Posts a message to the given channel.
-		Publish(channel string, message interface{})(int64, error)
+		Publish(channel string, message interface{}) (int64, error)
 
 		// Subscribe Subscribes the client to the specified channels
-		Subscribe(receive chan redis.Message, channels ...interface{})error
+		Subscribe(receive chan redis.Message, channels ...interface{}) error
 
 		//****************** lua scripts *********************
 		// EVAL used to evaluate scripts using the Lua interpreter built into Redis starting from version 2.6.0
@@ -225,7 +227,6 @@ func GetRuntimeCache() Cache {
 	return runtime_cache
 }
 
-
 //get redis cache
 //must set serverIp like "redis://:password@10.0.1.11:6379/0"
 func GetRedisCache(serverUrl string) RedisCache {
@@ -235,10 +236,10 @@ func GetRedisCache(serverUrl string) RedisCache {
 //get redis cache
 //must set serverIp like "redis://:password@10.0.1.11:6379/0"
 func GetRedisCachePoolConf(serverUrl string, maxIdle int, maxActive int) RedisCache {
-	if maxIdle <= 0{
+	if maxIdle <= 0 {
 		maxIdle = RedisConnPool_MaxIdle
 	}
-	if maxActive < 0{
+	if maxActive < 0 {
 		maxActive = RedisConnPool_MaxActive
 	}
 	c, ok := redisCacheMap[serverUrl]
@@ -254,7 +255,6 @@ func GetRedisCachePoolConf(serverUrl string, maxIdle int, maxActive int) RedisCa
 	}
 }
 
-
 //new runtime cache
 func NewRuntimeCache() Cache {
 	return runtime.NewRuntimeCache()
@@ -265,5 +265,3 @@ func NewRuntimeCache() Cache {
 func NewRedisCache(serverUrl string, maxIdle int, maxActive int) RedisCache {
 	return redis.NewRedisCache(serverUrl, maxIdle, maxActive)
 }
-
-
